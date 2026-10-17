@@ -46,7 +46,8 @@
     "vite": "8.3.4"
   },
   "overrides": {
-    "node-int64": "0.4.0"
+    "node-int64": "0.4.0",
+    "@malept/flatpak-bundler": "0.4.0"
   },
   "build": {
     "appId": "org.fyppppp.slime",
