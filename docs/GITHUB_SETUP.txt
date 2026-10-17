@@ -1,0 +1,25 @@
+GitHub source checkout
+
+This private repository contains application source, documentation and tests.
+experiments/, baselines/, archive/, .local/, runtime/, node_modules/, dist/,
+release/ and generated outputs are intentionally excluded. They remain local.
+The local distribution instructions in README.txt assume dependencies already
+exist; a fresh source checkout must install and build them first.
+
+Requirements: Node.js 24 and npm; Windows for the desktop application.
+  npm ci
+  npm run build
+  npm run test:ci
+
+CI runs on Windows for pushes and pull requests. It checks math formatting,
+model exports, model preflight, mocked provider integrations and launcher
+version handling, followed by TypeScript checking and the production build.
+It does not require API keys, invoke paid models, run research experiments,
+download the bundled Python solver, or package desktop installers.
+
+npm test remains the full local regression suite. Some tests require local
+experiment data, historical baselines and the solver runtime; it is not the
+CI command for a fresh clone. See scripts/prepare-solver.mjs before preparing
+the optional solver runtime with npm run solver:prepare.
+
+Never commit real API keys, local workspaces, experiment data or baselines.

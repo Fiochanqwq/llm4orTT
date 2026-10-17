@@ -1,0 +1,34 @@
+llm4orOvO 0.7.8 · 实验使用说明
+更新日期：2026-10-18
+
+一、准备
+从根目录启动脚本进入空白工作区，保存实际厂商、模型、API Key和token配置。
+实验配置中的任意model字段不会替换应用设置；运行前确认实际设置。
+experiments中的旧题库是开发/候选评价材料，不是独立确认性测试，也不是已运行的新实验。
+12题候选集：experiments/graduation-assistant-20261015/cases.public.json。
+人工答复及参考答案按同目录README.txt与operator-cards.private.txt使用，不把私有答案放入公开题面。
+
+二、运行
+在实验台导入公开题目，按需导入私有评分卡，选择generic/full、重复次数与请求额度。
+保存清单后检查模型、冻结快照、样本及总请求上限，再点击启动。
+等待答复时按固定答案卡回答，保存后继续；未覆盖的问题由人工处理。
+源码变更后创建新批次，不绕过冻结检查；历史失败保留。
+
+三、命令行（在工程根目录执行）
+下面的配置是已有10条开发校准草案，不会自动启动。
+node scripts/run-experiments.mjs dry-run --config experiments/mainline-preparation-20261013/calibration.draft.json
+node scripts/run-experiments.mjs create --config experiments/mainline-preparation-20261013/calibration.draft.json --data .local/workspace-clean
+将下面的ID替换为create返回的batch ID。start/resume可能发生真实API费用。
+node scripts/run-experiments.mjs start --batch ID --data .local/workspace-clean
+node scripts/run-experiments.mjs status --batch ID --data .local/workspace-clean
+node scripts/run-experiments.mjs pause --batch ID --data .local/workspace-clean
+node scripts/run-experiments.mjs resume --batch ID --data .local/workspace-clean
+node scripts/run-experiments.mjs cancel --batch ID --data .local/workspace-clean
+node scripts/run-experiments.mjs export --batch ID --data .local/workspace-clean --format json --output result.json
+node scripts/run-experiments.mjs export --batch ID --data .local/workspace-clean --format jsonl --output analysis.jsonl
+
+四、结果
+分别检查执行完成、提交模型状态、原题最终结论、独立评分与人工复核。
+不能用optimal替代原题正确，不能把unknown自动记为0，也不能删除失败后只统计成功。
+按题族和配对条件比较generic/full；重复运行不增加独立题族数量。
+暂停需等待在途请求收尾；取消不保证提供商未计费。软件没有金额硬限额。

@@ -1,0 +1,156 @@
+[
+  {
+    "id": "openai",
+    "name": "OpenAI",
+    "mark": "O",
+    "sdk": "openai",
+    "defaultModel": "gpt-6.1-sol",
+    "models": [
+      "gpt-6.1-sol",
+      "gpt-6-astra",
+      "gpt-6-luna"
+    ],
+    "regions": [
+      {
+        "id": "global",
+        "name": "全球",
+        "baseURL": "https://api.openai.com/v1"
+      }
+    ],
+    "docs": "https://developers.openai.com/api/docs/models",
+    "checkedAt": "2026-10-09",
+    "listModels": true
+  },
+  {
+    "id": "anthropic",
+    "name": "Anthropic",
+    "mark": "A",
+    "sdk": "@anthropic-ai/sdk",
+    "defaultModel": "claude-sonnet-5-5",
+    "models": [
+      "claude-sonnet-5-5",
+      "claude-haiku-5-5",
+      "claude-opus-5-5",
+      "claude-fable-5-1"
+    ],
+    "regions": [
+      {
+        "id": "global",
+        "name": "全球",
+        "baseURL": "https://api.anthropic.com"
+      }
+    ],
+    "docs": "https://platform.claude.com/docs/en/models/overview",
+    "checkedAt": "2026-10-09",
+    "listModels": true
+  },
+  {
+    "id": "gemini",
+    "name": "Gemini",
+    "mark": "G",
+    "sdk": "@google/genai",
+    "defaultModel": "gemini-3.8-flash",
+    "models": [
+      "gemini-3.8-flash",
+      "gemini-3.5-flash-lite",
+      "gemini-3.1-pro-preview"
+    ],
+    "regions": [
+      {
+        "id": "global",
+        "name": "全球",
+        "baseURL": "https://generativelanguage.googleapis.com"
+      }
+    ],
+    "docs": "https://ai.google.dev/gemini-api/docs/models",
+    "checkedAt": "2026-10-09",
+    "listModels": true
+  },
+  {
+    "id": "glm",
+    "name": "GLM",
+    "mark": "Z",
+    "sdk": "openai",
+    "defaultModel": "glm-5.3",
+    "models": [
+      "glm-5.3",
+      "glm-5.3-flash",
+      "glm-5.2"
+    ],
+    "regions": [
+      {
+        "id": "cn",
+        "name": "中国大陆",
+        "baseURL": "https://open.bigmodel.cn/api/paas/v4"
+      },
+      {
+        "id": "global",
+        "name": "国际站 · Z.AI",
+        "baseURL": "https://api.z.ai/api/paas/v4",
+        "defaultModel": "glm-5",
+        "models": [
+          "glm-5"
+        ],
+        "docs": "https://docs.z.ai/guides/llm/glm-5"
+      }
+    ],
+    "docs": "https://docs.bigmodel.cn/cn/guide/models/text/glm-5.3",
+    "checkedAt": "2026-10-09",
+    "listModels": false
+  },
+  {
+    "id": "deepseek",
+    "name": "DeepSeek",
+    "mark": "D",
+    "sdk": "openai",
+    "defaultModel": "deepseek-flash",
+    "models": [
+      "deepseek-flash",
+      "deepseek-v4-pro",
+      "deepseek-v4-flash",
+      "deepseek-v4-flash-vision-exp"
+    ],
+    "regions": [
+      {
+        "id": "global",
+        "name": "全球",
+        "baseURL": "https://api.deepseek.com"
+      }
+    ],
+    "docs": "https://api-docs.deepseek.com/",
+    "checkedAt": "2026-10-18",
+    "listModels": true
+  },
+  {
+    "id": "qwen",
+    "name": "Qwen",
+    "mark": "Q",
+    "sdk": "openai",
+    "defaultModel": "qwen-plus",
+    "models": [
+      "qwen-plus",
+      "qwen-flash",
+      "qwen3.8-max"
+    ],
+    "regions": [
+      {
+        "id": "cn",
+        "name": "中国大陆 · 北京",
+        "baseURL": "https://dashscope.aliyuncs.com/compatible-mode/v1"
+      },
+      {
+        "id": "sg",
+        "name": "国际站 · 新加坡",
+        "baseURL": "https://dashscope-intl.aliyuncs.com/compatible-mode/v1"
+      },
+      {
+        "id": "us",
+        "name": "美国 · 弗吉尼亚",
+        "baseURL": "https://dashscope-us.aliyuncs.com/compatible-mode/v1"
+      }
+    ],
+    "docs": "https://help.aliyun.com/zh/model-studio/compatibility-of-openai-with-dashscope",
+    "checkedAt": "2026-10-09",
+    "listModels": true
+  }
+]

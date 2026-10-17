@@ -1,0 +1,83 @@
+{
+  "python": {
+    "version": "3.13.16",
+    "filename": "python-3.13.16-embed-amd64.zip",
+    "url": "https://www.python.org/ftp/python/3.13.16/python-3.13.16-embed-amd64.zip",
+    "sha256": "97dae5274cc54867065e8d5a3226e48c35017ed332a0fdb0e27d5b5821961297"
+  },
+  "packages": [
+    {
+      "name": "pyomo",
+      "version": "6.10.1",
+      "filename": "pyomo-6.10.1-py3-none-any.whl",
+      "url": "https://files.pythonhosted.org/packages/40/ba/8526e3d84432a01dd4d12a3c0b3cdc8ec67432792b854ebc911e575646ca/pyomo-6.10.1-py3-none-any.whl",
+      "sha256": "7a81b5301d4c0389809c1afd12311d23db04522341566332229d8ce4226bccb1",
+      "bytes": 4175938,
+      "requires": [
+        "coverage; extra == \"tests\"",
+        "parameterized; extra == \"tests\"",
+        "pybind11; extra == \"tests\"",
+        "pytest!=9.0.0; extra == \"tests\"",
+        "pytest-parallel; extra == \"tests\"",
+        "Sphinx!=8.2.0,!=9.0.*,!=9.1.0,>4; extra == \"docs\"",
+        "sphinx-copybutton; extra == \"docs\"",
+        "sphinx_rtd_theme>0.5; extra == \"docs\"",
+        "sphinxcontrib-jsmath; extra == \"docs\"",
+        "sphinxcontrib-napoleon; extra == \"docs\"",
+        "numpy; extra == \"docs\"",
+        "scipy; extra == \"docs\"",
+        "dill; extra == \"optional\"",
+        "ipython; extra == \"optional\"",
+        "linear-tree; python_version < \"3.14\" and extra == \"optional\"",
+        "scikit-learn<1.7.0; (implementation_name != \"pypy\" and python_version < \"3.14\") and extra == \"optional\"",
+        "scikit-learn; (implementation_name != \"pypy\" and python_version >= \"3.14\") and extra == \"optional\"",
+        "matplotlib!=3.6.1,>=3.6.0; extra == \"optional\"",
+        "networkx; extra == \"optional\"",
+        "numpy; extra == \"optional\"",
+        "openpyxl; extra == \"optional\"",
+        "packaging; extra == \"optional\"",
+        "pint; implementation_name != \"pypy\" and extra == \"optional\"",
+        "plotly; extra == \"optional\"",
+        "python-louvain; extra == \"optional\"",
+        "pyyaml; extra == \"optional\"",
+        "qtconsole; extra == \"optional\"",
+        "scipy; extra == \"optional\"",
+        "sympy; extra == \"optional\"",
+        "xlrd; extra == \"optional\"",
+        "z3-solver; extra == \"optional\"",
+        "pywin32; platform_system == \"Windows\" and extra == \"optional\"",
+        "casadi; implementation_name != \"pypy\" and extra == \"optional\"",
+        "numdifftools; implementation_name != \"pypy\" and extra == \"optional\"",
+        "pandas; implementation_name != \"pypy\" and extra == \"optional\"",
+        "seaborn; implementation_name != \"pypy\" and extra == \"optional\""
+      ],
+      "license": "BSD-3-Clause"
+    },
+    {
+      "name": "highspy",
+      "version": "1.15.1",
+      "filename": "highspy-1.15.1-cp313-cp313-win_amd64.whl",
+      "url": "https://files.pythonhosted.org/packages/ca/63/2e104bab0117415c68950f249e42f0974f74665d0313dfeddceb1f74c47d/highspy-1.15.1-cp313-cp313-win_amd64.whl",
+      "sha256": "46fe314b918257361c54170852bc561c78d0f84d94e2ad263859d818127e6e76",
+      "bytes": 2711119,
+      "requires": [
+        "numpy",
+        "typing_extensions; python_version < \"3.10\"",
+        "pytest; extra == \"test\"",
+        "numpy; extra == \"test\"",
+        "highspy-extras==1.15.1; extra == \"extras\""
+      ],
+      "license": "MIT"
+    },
+    {
+      "name": "numpy",
+      "version": "2.5.3",
+      "filename": "numpy-2.5.3-cp313-cp313-win_amd64.whl",
+      "url": "https://files.pythonhosted.org/packages/f3/ec/100f2b1794ede74a9b3d7ec6b9736927f56713414c1dfe19ab6c383494bf/numpy-2.5.3-cp313-cp313-win_amd64.whl",
+      "sha256": "71cad2b2a7451ab79d8f5e71b453485b6775963d5cf794179144a7463fe6e8ec",
+      "bytes": 12560965,
+      "requires": null,
+      "license": "BSD-3-Clause AND 0BSD AND MIT AND Zlib AND CC0-1.0"
+    }
+  ]
+}

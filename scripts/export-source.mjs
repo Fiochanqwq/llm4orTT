@@ -1,0 +1,20 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import crypto from 'node:crypto';
+import { execFileSync } from 'node:child_process';
+const version = JSON.parse(fs.readFileSync('package.json', 'utf8')).version;
+const destination = path.resolve('delivery', version, 'source');
+fs.mkdirSync(destination, { recursive: true });
+const directories = ['assets', 'docs', 'electron', 'public', 'scripts', 'server', 'shared', 'solver', 'src', 'test'];
+const files = ['.gitignore', 'package.json', 'package-lock.json', 'README.txt', 'THIRD_PARTY_NOTICES.txt', 'Start-Desktop.cmd', 'Start-Browser.cmd', 'index.html', 'tsconfig.json', 'vite.config.ts'];
+for (const file of files) fs.copyFileSync(file, path.join(destination, file));
+for (const dir of directories) fs.cpSync(dir, path.join(destination, dir), { recursive: true });
+const manifest = [];
+function scan(dir) { for (const item of fs.readdirSync(dir, { withFileTypes: true })) { const file = path.join(dir, item.name); if (item.isDirectory()) scan(file); else manifest.push({ file: path.relative(destination, file).replaceAll('\\', '/'), bytes: fs.statSync(file).size, sha256: crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex') }); } }
+scan(destination);
+const zip = path.resolve('delivery', version, `llm4orOvO-${version}-source.zip`);
+if (fs.existsSync(zip)) throw Error('Archive already exists; preserve it and choose a new output path.');
+execFileSync('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', 'Add-Type -AssemblyName System.IO.Compression.FileSystem; [IO.Compression.ZipFile]::CreateFromDirectory($env:SOURCE_EXPORT_DIR, $env:SOURCE_EXPORT_ZIP, [IO.Compression.CompressionLevel]::Optimal, $false)'], { windowsHide: true, env: { ...process.env, SOURCE_EXPORT_DIR: destination, SOURCE_EXPORT_ZIP: zip } });
+const report = { version, destination, files: manifest.length, sourceBytes: manifest.reduce((sum, f) => sum + f.bytes, 0), zip, zipBytes: fs.statSync(zip).size, manifest };
+fs.writeFileSync(path.resolve('delivery', version, 'source-manifest.json'), JSON.stringify(report, null, 2));
+console.log(JSON.stringify({ ...report, manifest: undefined }));
