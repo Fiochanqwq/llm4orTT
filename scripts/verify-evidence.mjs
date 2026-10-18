@@ -9,13 +9,19 @@ import { fileURLToPath } from 'node:url';
 import { runBenchmark } from './run-evidence-benchmark.mjs';
 import { executionSnapshot } from '../server/execution-snapshot.mjs';
 import { decisionMetrics, decisionMetricsVersion } from '../server/decision-metrics.mjs';
+import { controlledReport } from './analyze-controlled-evidence.mjs';
+import { checkPublishedEvidence } from './check-published-evidence.mjs';
 
 const root=fileURLToPath(new URL('../',import.meta.url));
 process.chdir(root);
-const directory=path.resolve(process.argv[2]||'qa/evidence-verification');
-const publishIndex=process.argv.indexOf('--publish');
-const publishDirectory=publishIndex>=0?path.resolve(process.argv[publishIndex+1]):null;
-if(fs.existsSync(path.join(directory,'verification.json')))throw Error('Use a fresh verification directory to preserve previous evidence');
+const args=process.argv.slice(2);
+assert.ok(args.length===0 || (args.length===1 && !args[0].startsWith('--')) ||
+  (args.length===3 && !args[0].startsWith('--') && args[1]==='--publish' && !args[2].startsWith('--')),
+  'Usage: npm run verify:evidence -- FRESH_DIRECTORY [--publish DIRECTORY]');
+const directory=path.resolve(args[0]||'qa/evidence-verification');
+const publishDirectory=args.length===3?path.resolve(args[2]):null;
+if(fs.existsSync(directory))throw Error('Use a fresh verification directory to preserve previous evidence');
+if(publishDirectory)assert.ok(directory!==publishDirectory && !publishDirectory.startsWith(directory+path.sep) && !directory.startsWith(publishDirectory+path.sep), 'Verification and publication directories must not overlap');
 fs.mkdirSync(directory,{recursive:true});
 const sha=data=>crypto.createHash('sha256').update(data).digest('hex');
 const report={schema:'llm4orovo.verification.v2',kind:'controlled_fault_injection_not_live_llm',generatedAt:new Date().toISOString(),
@@ -35,6 +41,7 @@ function check(name,args) {
 try {
   const pkg=JSON.parse(fs.readFileSync('package.json','utf8'));
   check('test-ci',['--test','--test-reporter=tap','--test-timeout=60000',...pkg.scripts['test:ci'].replace('node --test ','').split(' ')]);
+  check('test-evidence-coverage',['--test-reporter=tap',...pkg.scripts['test:evidence:coverage'].replace('node ','').split(' ')]);
   check('test-evidence',['--test','--test-reporter=tap','--test-timeout=60000','test/evidence.test.mjs']);
   // Invoke the same build tools directly: node --run corrupts non-ASCII cwd on some Windows builds.
   check('typecheck',['node_modules/typescript/bin/tsc','--noEmit']);
@@ -69,10 +76,17 @@ try {
   fs.writeFileSync(path.join(directory,'controlled-results.jsonl'),serialized);
   report.execution={runs:rows.length,failed:0,awaitingHuman:0,providerCalls:0,sourceAndDriverHashesVerified:true,exportHashesVerified:true,allTaskBudgetsRespected:true,
     resultsFile:'controlled-results.jsonl',resultsSha256:sha(serialized)};
+  report.statistics=controlledReport(directory);
+  assert.deepEqual(controlledReport(directory,{check:true}),report.statistics);
+  console.log('statistics: passed');
   report.passed=true;
-} catch(error) { report.error=error.message;process.exitCode=1;console.error(error); }
+  fs.writeFileSync(path.join(directory,'verification.json'),JSON.stringify(report,null,2)+'\n');
+  checkPublishedEvidence(directory);
+  console.log('published-bundle-check: passed');
+} catch(error) { report.passed=false;report.error=error.message;process.exitCode=1;console.error(error); }
 finally { fs.writeFileSync(path.join(directory,'verification.json'),JSON.stringify(report,null,2)+'\n'); }
 if(publishDirectory&&report.passed){
   fs.mkdirSync(publishDirectory,{recursive:true});
-  for(const file of ['verification.json','controlled-results.jsonl','protocol.json','driver-source-hashes.json'])fs.copyFileSync(path.join(directory,file),path.join(publishDirectory,file));
+  // Publish the manifest last so interrupted copies cannot appear verified.
+  for(const file of ['controlled-results.jsonl','protocol.json','driver-source-hashes.json','statistics.json','report.md','verification.json'])fs.copyFileSync(path.join(directory,file),path.join(publishDirectory,file));
 }

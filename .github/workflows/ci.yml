@@ -26,6 +26,9 @@ jobs:
           cache: npm
       - run: npm ci --no-audit --no-fund
       - run: npm run test:ci
+      - run: npm run verify:evidence:published
+      - name: Measure evidence JavaScript coverage
+        run: npm run test:evidence:coverage
       - run: npm run build
 
   codespace:
@@ -45,6 +48,7 @@ jobs:
       - name: Prepare clean Linux environment
         run: node scripts/setup-codespace.mjs
       - run: npm run test:ci
+      - run: npm run verify:evidence:published
       - name: Exercise real HiGHS solver
         run: node --test test/solver.test.mjs test/evidence.test.mjs
       - name: Reproduce and verify controlled evidence benchmark

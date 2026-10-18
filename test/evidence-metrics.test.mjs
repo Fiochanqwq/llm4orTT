@@ -30,6 +30,21 @@ test('old records remain unknown instead of guessing from aggregate counts', () 
   assert.equal(result.semanticRepairs,null);
   assert.equal(decisionMetrics({ decisionMetricsVersion }).firstDecision,null);
 });
+
+test('missing or damaged action history is unknown, while a genuine empty log counts zero', () => {
+  for (const decisionEvents of [undefined, null, {}, [null], [{sequence:2,action:'deliver',repairKind:null}], [{sequence:1,action:'repair',repairKind:'unknown'}]]) {
+    const result=decisionMetrics({decisionMetricsVersion,decisionEvents});
+    assert.equal(result.firstDecision,null);
+    assert.equal(result.semanticRepairs,null);
+    assert.equal(result.programmaticRepairs,null);
+    assert.equal(result.toolRepairs,null);
+  }
+  const fresh=decisionMetrics({decisionMetricsVersion,decisionEvents:[]});
+  assert.equal(fresh.firstDecision,null);
+  assert.equal(fresh.semanticRepairs,0);
+  assert.equal(fresh.programmaticRepairs,0);
+  assert.equal(fresh.toolRepairs,0);
+});
 test('runtime discovery handles embedded Windows, Windows venv and POSIX venv', t => {
   const root=fs.mkdtempSync(path.join(os.tmpdir(),'evidence-runtime-'));
   t.after(()=>fs.rmSync(root,{recursive:true,force:true}));

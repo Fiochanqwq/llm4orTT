@@ -1,6 +1,128 @@
 {
   "kind": "controlled_fault_injection_not_live_llm",
   "variantsPerBase": 2,
+  "caseManifest": [
+    {
+      "caseId": "A-omission-0",
+      "baseId": "A-omission",
+      "expectedDecision": "repair"
+    },
+    {
+      "caseId": "A-integer-0",
+      "baseId": "A-integer",
+      "expectedDecision": "repair"
+    },
+    {
+      "caseId": "A-sense-0",
+      "baseId": "A-sense",
+      "expectedDecision": "repair"
+    },
+    {
+      "caseId": "A-units-0",
+      "baseId": "A-units",
+      "expectedDecision": "repair"
+    },
+    {
+      "caseId": "B-unbounded-0",
+      "baseId": "B-unbounded",
+      "expectedDecision": "clarify"
+    },
+    {
+      "caseId": "B-coupled_ray-0",
+      "baseId": "B-coupled_ray",
+      "expectedDecision": "clarify"
+    },
+    {
+      "caseId": "B-conflict-0",
+      "baseId": "B-conflict",
+      "expectedDecision": "clarify"
+    },
+    {
+      "caseId": "B-zero_missing_demand-0",
+      "baseId": "B-zero_missing_demand",
+      "expectedDecision": "clarify"
+    },
+    {
+      "caseId": "C-production-0",
+      "baseId": "C-production",
+      "expectedDecision": "deliver"
+    },
+    {
+      "caseId": "C-covering-0",
+      "baseId": "C-covering",
+      "expectedDecision": "deliver"
+    },
+    {
+      "caseId": "C-equality-0",
+      "baseId": "C-equality",
+      "expectedDecision": "deliver"
+    },
+    {
+      "caseId": "C-binary-0",
+      "baseId": "C-binary",
+      "expectedDecision": "deliver"
+    },
+    {
+      "caseId": "A-omission-1",
+      "baseId": "A-omission",
+      "expectedDecision": "repair"
+    },
+    {
+      "caseId": "A-integer-1",
+      "baseId": "A-integer",
+      "expectedDecision": "repair"
+    },
+    {
+      "caseId": "A-sense-1",
+      "baseId": "A-sense",
+      "expectedDecision": "repair"
+    },
+    {
+      "caseId": "A-units-1",
+      "baseId": "A-units",
+      "expectedDecision": "repair"
+    },
+    {
+      "caseId": "B-unbounded-1",
+      "baseId": "B-unbounded",
+      "expectedDecision": "clarify"
+    },
+    {
+      "caseId": "B-coupled_ray-1",
+      "baseId": "B-coupled_ray",
+      "expectedDecision": "clarify"
+    },
+    {
+      "caseId": "B-conflict-1",
+      "baseId": "B-conflict",
+      "expectedDecision": "clarify"
+    },
+    {
+      "caseId": "B-zero_missing_demand-1",
+      "baseId": "B-zero_missing_demand",
+      "expectedDecision": "clarify"
+    },
+    {
+      "caseId": "C-production-1",
+      "baseId": "C-production",
+      "expectedDecision": "deliver"
+    },
+    {
+      "caseId": "C-covering-1",
+      "baseId": "C-covering",
+      "expectedDecision": "deliver"
+    },
+    {
+      "caseId": "C-equality-1",
+      "baseId": "C-equality",
+      "expectedDecision": "deliver"
+    },
+    {
+      "caseId": "C-binary-1",
+      "baseId": "C-binary",
+      "expectedDecision": "deliver"
+    }
+  ],
   "pairedUnit": "baseId (two parameter variants clustered)",
   "presets": [
     "structure",

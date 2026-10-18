@@ -81,7 +81,7 @@ def analyze(directory):
                                'Group B requests clarification and is settled without simulated facts: correct routing is not correct final delivery.',
                                'Wilcoxon assumes symmetric paired differences; the small discrete differences show asymmetry, so p-values are descriptive sensitivity checks.',
                                'Number coverage does not prove semantic completeness. Zero objectives and coefficient scaling can be legitimate.'])
-    (root / 'statistics.json').write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding='utf8')
+    (root / 'extended-statistics.json').write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding='utf8')
     for filename, data in [('metrics.csv', metrics), ('decisions.csv', decisions), ('mcnemar.csv', paired), ('wilcoxon.csv', signed)]:
         with (root / filename).open('w', encoding='utf-8-sig', newline='') as f:
             writer = csv.DictWriter(f, fieldnames=list(data[0])); writer.writeheader(); writer.writerows(data)
@@ -108,13 +108,13 @@ def analyze(directory):
         '## 复现', '', '```powershell', 'node scripts/run-evidence-benchmark.mjs experiments/evidence-pilot-new', 'python scripts/analyze-evidence-benchmark.py experiments/evidence-pilot-new', '```', '',
         '完整冻结清单见 batch.json、protocol.json；原始轨迹和求解证据见 export-bundle.json；盲评输入见 blind-review.json；逐运行指标见 analysis.jsonl。', '',
         '统计方法参考：[SciPy Wilcoxon](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.wilcoxon.html)、[statsmodels McNemar](https://www.statsmodels.org/stable/generated/statsmodels.stats.contingency_tables.mcnemar.html)。']
-    (root / 'report.md').write_text('\n'.join(lines)+'\n', encoding='utf8')
+    (root / 'extended-report.md').write_text('\n'.join(lines)+'\n', encoding='utf8')
     # Standalone local visualization: no credentials, remote assets, or network.
     def escape(text):
         return text.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;').replace('"', '&quot;')
     overall = [r for r in metrics if r['group'] == 'all']
     body = ''.join(f"<tr><th>{r['method']}</th><td><meter min='0' max='1' value='{r['correctDelivery']}'></meter> {r['correctDelivery']:.1%}</td><td>{r['silentErrorDelivery']:.1%}</td><td>{r['correctFirstDecision']:.1%}</td><td>{r['plannerCalls']:.2f} / {r['solves']:.2f} / {r['interactions']:.2f}</td></tr>" for r in overall)
-    (root / 'report.html').write_text("<!doctype html><html lang='zh-CN'><meta charset='utf-8'><title>求解证据配对实验</title><style>body{font:16px system-ui;max-width:1100px;margin:48px auto;padding:20px;color:#17232b;background:#fafaf8}h1{font-size:28px}table{width:100%;border-collapse:collapse}td,th{padding:16px;text-align:left;border-bottom:1px solid #ccd3d6}meter{width:110px}p,li{line-height:1.8}.note{padding:16px;background:#e7eeef}</style><h1>求解证据：受控配对实验</h1><p class='note'>固定回答 + 真实 HiGHS 求解。24 道合成题 × 3 个方法。真实模型 API 调用 0 次。此结果检验控制器机制，不能证明真实大模型能力提升。</p><table><tr><th>方法</th><th>正确交付率</th><th>静默错误率</th><th>首次决策正确率</th><th>平均规划 / 求解 / 交互次数</th></tr>"+body+"</table><p>来源：本目录 analysis.jsonl，2026-10-18；统计以 12 个模板家庭配对，防止把参数变体当作独立样本。</p><p><a href='report.md'>完整统计报告</a> · <a href='statistics.json'>机器可读结果</a></p><ul>"+''.join('<li>'+escape(s)+'</li>' for s in result['limitations'])+'</ul></html>', encoding='utf8')
+    (root / 'extended-report.html').write_text("<!doctype html><html lang='zh-CN'><meta charset='utf-8'><title>求解证据配对实验</title><style>body{font:16px system-ui;max-width:1100px;margin:48px auto;padding:20px;color:#17232b;background:#fafaf8}h1{font-size:28px}table{width:100%;border-collapse:collapse}td,th{padding:16px;text-align:left;border-bottom:1px solid #ccd3d6}meter{width:110px}p,li{line-height:1.8}.note{padding:16px;background:#e7eeef}</style><h1>求解证据：受控配对实验</h1><p class='note'>固定回答 + 真实 HiGHS 求解。24 道合成题 × 3 个方法。真实模型 API 调用 0 次。此结果检验控制器机制，不能证明真实大模型能力提升。</p><table><tr><th>方法</th><th>正确交付率</th><th>静默错误率</th><th>首次决策正确率</th><th>平均规划 / 求解 / 交互次数</th></tr>"+body+"</table><p>来源：本目录 analysis.jsonl，2026-10-18；统计以 12 个模板家庭配对，防止把参数变体当作独立样本。</p><p><a href='extended-report.md'>完整统计报告</a> · <a href='extended-statistics.json'>机器可读结果</a></p><ul>"+''.join('<li>'+escape(s)+'</li>' for s in result['limitations'])+'</ul></html>', encoding='utf8')
     print(json.dumps({'directory': str(root), 'overall': overall, 'mcnemar': paired, 'wilcoxon': signed}, ensure_ascii=False))
 
 

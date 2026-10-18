@@ -277,7 +277,7 @@ export async function executeV07({ config, messages, problem, engine, seconds, p
     for(let pass=0;pass<2;pass++){
       try {
         flow.programmaticEvidence=await solver.audit(model,original.map(m=>m.content).join('\n'),signal);
-        if(!flow.programmaticEvidence||flow.programmaticEvidence.diagnostic_error)throw Error(flow.programmaticEvidence?.diagnostic_error||'Audit returned no evidence');
+        if(!flow.programmaticEvidence||typeof flow.programmaticEvidence!=='object'||Array.isArray(flow.programmaticEvidence)||flow.programmaticEvidence.prompt_audited!==true||flow.programmaticEvidence.diagnostic_error)throw Error(flow.programmaticEvidence?.diagnostic_error||'Audit returned invalid or unaudited evidence');
       } catch(error) { disableEvidence(error); break; }
       const decision=evidenceDecision(flow.programmaticEvidence,{limits:agentLimits,calls:task.calls,solves:task.solves,clarifications:task.clarifications,repair:methods.repair});
       (flow.evidenceDecisions||=[]).push({...decision,phase:'static'});update();
@@ -339,7 +339,7 @@ export async function executeV07({ config, messages, problem, engine, seconds, p
     task.programmaticRepairCount=1;task.programmaticFeedback={execution_error:record.error,status:record.status};task.technicalFailure=true;methods.repairStatus='executed';
     return executeV07({config,messages,problem,engine,seconds,planner,solver,signal,answer,update,retry:true,compact});
   }
-  if(evidenceEnabled&&record.programmaticEvidence?.diagnostic_error)disableEvidence(record.programmaticEvidence.diagnostic_error);
+  if(evidenceEnabled&&contract.modelPurpose==='final_task'&&(!record.programmaticEvidence||record.programmaticEvidence.diagnostic_error))disableEvidence(record.programmaticEvidence?.diagnostic_error||'Solver returned no postsolve evidence');
   if(evidenceEnabled&&record.programmaticEvidence&&contract.modelPurpose==='final_task'){
     const e=record.programmaticEvidence, decision=evidenceDecision(e,{status:record.status,review:flow.review?.status,calls:task.calls,solves:task.solves,clarifications:task.clarifications,limits:agentLimits,repair:methods.repair});
     (flow.evidenceDecisions||=[]).push({...decision,phase:'postsolve'});update();

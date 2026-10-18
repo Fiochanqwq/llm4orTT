@@ -1,0 +1,8 @@
+# Source snapshots must have identical bytes on Windows and Linux.
+*.mjs text eol=lf
+*.py text eol=lf
+*.json text eol=lf
+/.github/workflows/ci.yml text eol=lf
+/.gitattributes text eol=lf
+# Published evidence is hashed byte-for-byte and must survive checkout unchanged.
+/docs/evidence/controlled/* -text

@@ -56,7 +56,7 @@ test('1000 mock trajectories persist independently; failures survive; no private
   const dir=directory();let count=0;const service=new ExperimentService(dir,{runner:async input=>{assert.ok(!JSON.stringify(input).includes('private_marker'));count++;if(count%100===0)throw Error('injected');return {status:'complete',mock:true};}});
   const b=await service.create({cases:[{id:'dev',prompt:'public-only',privateCard:{note:'private_marker'}}],presets:['legacy','delivery','structure','semantic','budget','audit','full','native_api'],repeats:100,requestCap:10});
   const b2=await service.create({cases:[{id:'dev2',prompt:'public-only'}],presets:['structure','full'],repeats:100,requestCap:10});
-  service.action(b.id,'start');service.action(b2.id,'start');while(service.working)await new Promise(r=>setTimeout(r,10));assert.equal(count,1000);
+  service.action(b.id,'start');service.action(b2.id,'start');while(service.working)await new Promise(r=>setTimeout(r,10));if(service.storageError)throw service.storageError;assert.equal(count,1000);
   assert.equal(service.list().reduce((n,b)=>n+b.failed,0),10);assert.equal(fs.readdirSync(path.join(dir,'experiments/runs')).length,1000);
   const reopened=new ExperimentService(dir,{runner:async()=>{throw Error('must not rerun');}});assert.equal(reopened.list().reduce((n,b)=>n+b.completed,0),990);
   fs.writeFileSync(path.join(dir,'mock-report.json'),JSON.stringify({trajectories:count,completed:990,injectedFailures:10,providerCalls:0,purpose:'infrastructure_only'}));

@@ -19,6 +19,7 @@ import { createModelQueue } from './model-queue.mjs';
 import { behavioralChecks } from './behavioral.mjs';
 import { StorageError } from './persistence.mjs';
 import { UserInputError } from './user-error.mjs';
+import { listenLoopback } from './listen-loopback.mjs';
 const mime = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.svg': 'image/svg+xml', '.woff2': 'font/woff2', '.woff': 'font/woff', '.ttf': 'font/ttf', '.png': 'image/png', '.ico': 'image/x-icon', '.txt': 'text/plain; charset=utf-8' };
 export async function startServer({ directory, staticDir, port = 43127, dev = false, externalOrigin = null, secretVault = vault, generator = generate, planner = planOptimization, modelLister = listModels, connectionTester = testConnection }) {
   if (externalOrigin && (new URL(externalOrigin).protocol !== 'https:' || new URL(externalOrigin).origin !== externalOrigin)) throw Error('Invalid external origin');
@@ -288,7 +289,7 @@ export async function startServer({ directory, staticDir, port = 43127, dev = fa
       if (req.method === 'HEAD') res.end(); else fs.createReadStream(file).on('error',()=>res.destroy()).pipe(res);
     } catch (error) { if(error instanceof StorageError)storageFailure(error); json(res, error instanceof StorageError ? 503 : 400, { error: error instanceof StorageError || error instanceof UserInputError || /^(密钥|请|模型|名称|主题|地区|输出|自定义|未知|没有|当前|本地|输入|服务商|请求|不支持)/.test(error.message || '') ? error.message : '操作失败，请检查输入后重试', ...(error instanceof UserInputError || error instanceof StorageError?{code:error.code}:{}) }); }
   });
-  await new Promise((resolve, reject) => { server.once('error', reject); server.listen(port, '127.0.0.1', resolve); });
+  await listenLoopback(server, port);
   origin = 'http://127.0.0.1:' + server.address().port;
   return { server, store, solver, experiments, exports, token, origin, close: async () => { for (const controller of active.values()) controller.abort(); await experiments.close(); solver.close(); await new Promise(resolve => server.close(resolve)); } };
 }

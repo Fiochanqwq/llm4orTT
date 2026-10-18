@@ -20,7 +20,7 @@ function fixture(audit, { programmaticEvidence, numericalError=false } = {}) {
   return {run,controller,answer,inputs};
 }
 test('audit exceptions, missing adapters, and invalid results fall back to the reviewed solver path', async()=>{
-  for(const audit of [undefined,async()=>{throw Error('worker unavailable');},async()=>null,async()=>({diagnostic_error:'parse failure'})]) {
+  for(const audit of [undefined,async()=>{throw Error('worker unavailable');},...[null,{},[],true,'invalid',{prompt_audited:false},{diagnostic_error:'parse failure'}].map(value=>async()=>value)]) {
     const f=fixture(audit);await f.run();const flow=f.answer.automation;
     assert.equal(flow.stage,'complete');assert.equal(flow.review.status,'no_issue_found');
     assert.equal(flow.task.calls,2);assert.equal(flow.task.solves,1);assert.equal(flow.task.clarifications,0);
@@ -33,6 +33,13 @@ test('postsolve diagnostic failure retains valid solver result and releases unus
   const f=fixture(async()=>({prompt_audited:true}),{programmaticEvidence:{diagnostic_error:'postsolve failed',auxiliary_solves:0}});
   await f.run();assert.equal(f.answer.automation.stage,'complete');assert.equal(f.answer.automation.task.solves,1);
   assert.equal(f.answer.automation.task.evidenceDisabled.reason,'postsolve failed');
+});
+test('missing postsolve evidence is explicitly downgraded, not silently treated as audited',async()=>{
+  const f=fixture(async()=>({prompt_audited:true}));
+  await f.run();
+  assert.equal(f.answer.automation.stage,'complete');
+  assert.equal(f.answer.automation.task.evidenceDisabled.reason,'Solver returned no postsolve evidence');
+  assert.equal(decisionMetrics(f.answer.automation.task).firstDecision,'deliver');
 });
 test('audit cancellation propagates and never starts a fallback solve',async()=>{
   const f=fixture(async()=>{f.controller.abort();throw Error('aborted worker');});
