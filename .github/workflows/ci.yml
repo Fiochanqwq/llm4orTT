@@ -27,3 +27,33 @@ jobs:
       - run: npm ci --no-audit --no-fund
       - run: npm run test:ci
       - run: npm run build
+
+  codespace:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      ELECTRON_SKIP_BINARY_DOWNLOAD: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Prepare clean Linux environment
+        run: node scripts/setup-codespace.mjs
+      - run: npm run test:ci
+      - name: Exercise real HiGHS solver
+        run: node --test test/solver.test.mjs
+      - name: Verify browser launcher and restart
+        env:
+          CODESPACES: 'true'
+          CODESPACE_NAME: ci-test
+          GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN: app.github.dev
+        run: |
+          npm run codespace > /tmp/llm4or-launch.txt
+          npm run codespace > /tmp/llm4or-reopen.txt
+          cmp /tmp/llm4or-launch.txt /tmp/llm4or-reopen.txt
+          curl --fail http://127.0.0.1:43127/api/health

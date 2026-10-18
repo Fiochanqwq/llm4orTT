@@ -20,7 +20,8 @@ import { behavioralChecks } from './behavioral.mjs';
 import { StorageError } from './persistence.mjs';
 import { UserInputError } from './user-error.mjs';
 const mime = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.svg': 'image/svg+xml', '.woff2': 'font/woff2', '.woff': 'font/woff', '.ttf': 'font/ttf', '.png': 'image/png', '.ico': 'image/x-icon', '.txt': 'text/plain; charset=utf-8' };
-export async function startServer({ directory, staticDir, port = 43127, dev = false, secretVault = vault, generator = generate, planner = planOptimization, modelLister = listModels, connectionTester = testConnection }) {
+export async function startServer({ directory, staticDir, port = 43127, dev = false, externalOrigin = null, secretVault = vault, generator = generate, planner = planOptimization, modelLister = listModels, connectionTester = testConnection }) {
+  if (externalOrigin && (new URL(externalOrigin).protocol !== 'https:' || new URL(externalOrigin).origin !== externalOrigin)) throw Error('Invalid external origin');
   const store = new Store(directory, secretVault), token = crypto.randomBytes(32).toString('hex'), active = new Map();
   const solver = new SolverService(directory);
   const modelQueue=createModelQueue(), rawPlanner=planner, rawGenerator=generator;
@@ -60,8 +61,8 @@ export async function startServer({ directory, staticDir, port = 43127, dev = fa
     res.setHeader('X-Content-Type-Options', 'nosniff'); res.setHeader('Referrer-Policy', 'no-referrer');
     res.setHeader('X-Frame-Options', 'DENY');
     res.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'");
-    const allowedOrigins = [origin, ...(dev ? ['http://127.0.0.1:5173'] : [])];
-    if (req.headers.host !== new URL(origin).host && !(dev && req.headers.host === '127.0.0.1:5173')) return json(res, 403, { error: '访问来源无效' });
+    const allowedOrigins = [origin, ...(externalOrigin ? [externalOrigin] : []), ...(dev ? ['http://127.0.0.1:5173'] : [])];
+    if (!allowedOrigins.some(allowed => req.headers.host === new URL(allowed).host)) return json(res, 403, { error: '访问来源无效' });
     if (req.headers.origin && !allowedOrigins.includes(req.headers.origin)) return json(res, 403, { error: '访问来源无效' });
     if (req.headers['sec-fetch-site'] === 'cross-site') return json(res, 403, { error: '访问来源无效' });
     const url = new URL(req.url, origin), route = url.pathname;

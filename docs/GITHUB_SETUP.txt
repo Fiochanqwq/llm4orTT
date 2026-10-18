@@ -11,11 +11,17 @@ Requirements: Node.js 24 and npm; Windows for the desktop application.
   npm run build
   npm run test:ci
 
-CI runs on Windows for pushes and pull requests. It checks math formatting,
+CI runs on Windows and Linux for pushes and pull requests. It checks math formatting,
 model exports, model preflight, mocked provider integrations and launcher
-version handling, followed by TypeScript checking and the production build.
+version handling, cloud authentication and encrypted storage, followed by TypeScript checking and the production build.
 It does not require API keys, invoke paid models, run research experiments,
-download the bundled Python solver, or package desktop installers.
+package desktop installers. The Linux job prepares a Python virtual environment
+and runs real HiGHS regression tests and the Codespaces launch command.
+
+GitHub browser usage: see README.md. The dev container installs dependencies
+and builds on creation, then starts/reuses the service when attached. Use the
+complete terminal link, keeping the forwarded port private. Runtime data and
+the cloud encryption key are stored only in .local/codespace-workspace/.
 
 npm test remains the full local regression suite. Some tests require local
 experiment data, historical baselines and the solver runtime; it is not the

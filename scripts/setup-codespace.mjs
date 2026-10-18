@@ -1,0 +1,12 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import { execFileSync } from 'node:child_process';
+import { appRoot } from '../server/codespace-config.mjs';
+process.chdir(appRoot);
+if (process.platform === 'win32') throw Error('This setup prepares the Linux Codespaces runtime.');
+execFileSync('npm', ['ci', '--no-audit', '--no-fund'], { stdio: 'inherit', env: { ...process.env, ELECTRON_SKIP_BINARY_DOWNLOAD: '1' } });
+execFileSync('python3', ['-m', 'venv', 'runtime/python'], { stdio: 'inherit' });
+const lock = JSON.parse(fs.readFileSync('docs/solver-lock.json', 'utf8'));
+execFileSync(path.join(appRoot, 'runtime/python/bin/python'), ['-m', 'pip', 'install', '--disable-pip-version-check', ...lock.packages.map(p => `${p.name}==${p.version}`)], { stdio: 'inherit' });
+fs.copyFileSync('docs/solver-lock.json', 'runtime/python/solver-lock.json');
+execFileSync('npm', ['run', 'build'], { stdio: 'inherit' });

@@ -10,7 +10,7 @@ import { validateModel, pyomoSource } from '../shared/solver-model.mjs';
 
 const appRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const resourceRoot = appRoot.endsWith('app.asar') ? path.dirname(appRoot) : appRoot;
-const bundledPython = path.join(resourceRoot, 'runtime/python/python.exe');
+const bundledPython = path.join(resourceRoot, process.platform === 'win32' ? 'runtime/python/python.exe' : 'runtime/python/bin/python');
 const worker = path.join(resourceRoot, 'solver/worker.py');
 const terminal = new Set(['optimal', 'infeasible', 'unbounded', 'infeasible_or_unbounded', 'time_limit', 'unknown', 'error', 'rejected', 'unavailable', 'stopped', 'interrupted', 'output_limit']);
 
@@ -46,7 +46,7 @@ export class SolverService {
     if (this.active) throw Error('请先停止求解');
     if (typeof value.gurobiPython !== 'string') throw Error('请选择 Python 路径');
     const file = value.gurobiPython.trim();
-    if (file && (!path.isAbsolute(file) || !/^python(?:3(?:\.\d+)?)?\.exe$/i.test(path.basename(file)) || !fs.existsSync(file) || !fs.statSync(file).isFile())) throw Error('请选择有效的 python.exe 绝对路径');
+    if (file && (!path.isAbsolute(file) || !/^python(?:3(?:\.\d+)?)?(?:\.exe)?$/i.test(path.basename(file)) || !fs.existsSync(file) || !fs.statSync(file).isFile())) throw Error('请选择有效的 Python 解释器绝对路径');
     try{atomicJson(this.configPath,{gurobiPython:file});}catch(error){this.storageError=error;this.onStorageError?.(error);throw error;}this.config = { gurobiPython: file }; return this.info();
   }
   list() { return [...this.jobs.values()].sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(0, 30).map(({ id, createdAt, status, engine, name, objective, durationMs }) => ({ id, createdAt, status, engine, name, objective, durationMs })); }
