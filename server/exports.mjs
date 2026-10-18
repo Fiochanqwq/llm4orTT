@@ -4,6 +4,7 @@ import crypto from 'node:crypto';
 import { Readable } from 'node:stream';
 import packageInfo from '../package.json' with {type:'json'};
 import { digest } from './experiments.mjs';
+import { decisionMetrics } from './decision-metrics.mjs';
 const table=Array.from({length:256},(_,n)=>{for(let i=0;i<8;i++)n=n&1?0xedb88320^(n>>>1):n>>>1;return n>>>0;});
 const crc=buffer=>{let n=0xffffffff;for(const b of buffer)n=table[(n^b)&255]^(n>>>8);return(n^0xffffffff)>>>0;};
 export function analysisRow(run){
@@ -16,7 +17,8 @@ export function analysisRow(run){
     durationMs:run.completedAt&&run.createdAt?Date.parse(run.completedAt)-Date.parse(run.createdAt):null,
     requests:requests.map(r=>({id:r.id,stage:r.stage,state:r.state,promptHash:r.promptHash??null,usage:r.response?.usage??null,rawUsage:r.response?.rawUsage??null,requestMetadata:r.response?.requestMetadata??null,httpStatus:r.httpStatus??null,createdAt:r.createdAt,completedAt:r.completedAt??null})),
     calls:flow?.task?.calls??run.nativeCalls??requests.length,solves:flow?.task?.solves??0,clarifications:flow?.task?.clarifications??run.environmentTurns??0,
-    protocolCorrections:flow?.task?.protocolCorrections??0,semanticRepairs:flow?.task?.semanticRepairs??0,unknownUsageRequests:requests.filter(r=>r.response?.usage?.input==null||r.response?.usage?.output==null).length});
+    programmaticEvidence:flow?.programmaticEvidence??null,evidenceDecisions:flow?.evidenceDecisions??[],evidenceDisabled:flow?.task?.evidenceDisabled??null,
+    ...decisionMetrics(flow?.task),protocolCorrections:flow?.task?.protocolCorrections??0,unknownUsageRequests:requests.filter(r=>r.response?.usage?.input==null||r.response?.usage?.output==null).length});
 }
 export function readStoredZip(buffer){
   if(buffer.length>64*1024*1024)throw Error('输入归档超过 64 MB');let offset=0;const entries=[];

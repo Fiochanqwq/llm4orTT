@@ -11,12 +11,15 @@ import { agentLimits, reserveCall, inputHash, modelFingerprint, decide, stageTok
 import { OptimizationError, solverEvidence } from './optimization-legacy.mjs';
 import { budgetDecision, resolveBudgetReply } from './budget-relevance.mjs';
 import { queuedSolve } from './solver-queue.mjs';
+import { evidenceDecision, evidenceRepairInstruction, evidenceQuestion } from './evidence-routing.mjs';
+import { decisionMetricsVersion, recordAction } from './decision-metrics.mjs';
 const hash = x => crypto.createHash('sha256').update(typeof x === 'string' ? x : JSON.stringify(x)).digest('hex');
 export function initializeMethods(flow, config, engine, preset = 'full') {
   const task = flow.task;
   task.frozen ||= frozenConfig(config, engine, preset);
   if (task.frozen.methodVersion !== methodVersion && task.frozen.preset !== 'legacy') throw new OptimizationError('当前任务属于旧协议版本。历史记录已保留，请新建对话使用更新后的方法。');
   task.factVersion ||= 0; task.questions ||= []; task.requests ||= [];
+  if (!task.calls) { task.decisionMetricsVersion = decisionMetricsVersion; task.decisionEvents ||= []; }
   const id = task.frozen.preset;
   if (!Object.hasOwn(methodPresets,id)) throw new OptimizationError('未知方法预设');
   if(id!=='legacy'){flow.policyVersion='0.7.7-local-1';flow.executionPolicyVersion='0.7.7-contract-1';}
@@ -33,12 +36,21 @@ export function validateReply(task, reply) {
 }
 export async function executeV07({ config, messages, problem, engine, seconds, planner, solver, signal, answer, update, retry = false, compact = false, continuation = false }) {
   const flow = answer.automation, task = flow.task, methods = flow.methods, en = config.language === 'en';
+  let evidenceEnabled = !!methods.programmatic && !task.evidenceDisabled;
+  const disableEvidence = error => {
+    signal.throwIfAborted();
+    evidenceEnabled = false;
+    task.evidenceDisabled = { code: 'EVIDENCE_UNAVAILABLE', reason: String(error?.message || error).slice(0, 2000) };
+    flow.programmaticEvidence = { diagnostic_error: task.evidenceDisabled.reason };
+    (flow.evidenceDecisions ||= []).push({ action: 'fallback', phase: 'availability', reasons: ['evidence_unavailable'], fallbackMode: 'no_evidence' });
+    update();
+  };
   const researchTool=compact?(methods.structured?compactResearchTool:actionTool):legacyResearchTool,reviewTool=compact?compactReviewTool:legacyReviewTool;
   const researchPrompt=compact?language=>compactPrompt(language,methods):legacyResearchPrompt,reviewPrompt=compact?compactReviewPrompt:legacyReviewPrompt;
   const say = (zh, english) => en ? english : zh;
   const unfinished = outcome => { flow.taskOutcome=outcome; if(flow.resultContract)flow.resultContract.taskOutcome=outcome; flow.publicOutcome={status:null,values:null,objective:null,complete:false,source:'unfinished'}; };
-  const stop = (code, zh, english, stage = 'paused') => { unfinished(stage === 'unsupported' ? 'unsupported' : 'partial'); decide(answer, code, say(zh, english), [], stage); update(); return null; };
-  const fail = (zh, english) => { task.technicalFailure = true; unfinished('failed'); flow.failure ||= {layer:flow.result?'numeric':'solver',code:flow.result?'RESULT_VALIDATION_FAILED':'SOLVER_UNAVAILABLE',stage:flow.stage,path:'$',recoverable:false}; update(); throw new OptimizationError(say(zh, english)); };
+  const stop = (code, zh, english, stage = 'paused') => { recordAction(task,'fallback',code); unfinished(stage === 'unsupported' ? 'unsupported' : 'partial'); decide(answer, code, say(zh, english), [], stage); update(); return null; };
+  const fail = (zh, english) => { recordAction(task,'fallback','technical_failure'); task.technicalFailure = true; unfinished('failed'); flow.failure ||= {layer:flow.result?'numeric':'solver',code:flow.result?'RESULT_VALIDATION_FAILED':'SOLVER_UNAVAILABLE',stage:flow.stage,path:'$',recoverable:false}; update(); throw new OptimizationError(say(zh, english)); };
   const publish = (record, extra = {}) => {
     flow.result = solverEvidence(record); flow.runId = record.id;
     flow.resultContract = resultContract(record, { factVersion: task.factVersion, modelVersion: task.modelVersion,
@@ -60,18 +72,19 @@ export async function executeV07({ config, messages, problem, engine, seconds, p
   const askQuestions = (questions, gaps, summary) => {
     if (task.clarifications >= agentLimits.clarifications) return stop('clarification_budget', '已达到澄清上限，保留未解决缺口。', 'Clarification limit reached; unresolved gaps are retained.');
     task.clarifications++;
+    recordAction(task,'clarify','business_conditions');
     flow.questions = questions.map((q,i) => ({ ...q, id: crypto.randomUUID(), taskId: task.id, gapId: gaps[i].id, factVersion: task.factVersion, status: 'pending' }));
     for (const [i,q] of flow.questions.entries()) { gaps[i].status = 'asked'; gaps[i].questionId = q.id; task.questions.push(q); }
     task.contract = structuredClone(flow.contract);
     unfinished('awaiting_answer'); flow.stage = 'clarification'; flow.decision = { code: 'missing_conditions', summary }; answer.content = summary; update(); return null;
   };
-  async function request(stage, prompt, tool, input) {
+  async function request(stage, prompt, tool, input, repairKind = null) {
     signal.throwIfAborted();
     const all = [{role:'system',content:prompt}, ...input];
-    if (!reserveCall(answer, all, config.language)) { flow.taskOutcome='partial'; update(); return null; }
+    if (!reserveCall(answer, all, config.language)) { recordAction(task,'fallback','request_budget'); flow.taskOutcome='partial'; update(); return null; }
     if(stage==='protocol_repair'){task.protocolCorrections=(task.protocolCorrections||0)+1;methods.protocolRepairStatus='executed';}
-    if(stage==='repairing')task.semanticRepairs=(task.semanticRepairs||0)+1;
-    const req = { id: crypto.randomUUID(), stage, status: 'reserved', createdAt: new Date().toISOString(), promptHash: hash(prompt), prompt, input: structuredClone(input), usage: {input:null,output:null} };
+    if(repairKind){recordAction(task,'repair','repair_request_reserved',repairKind);if(repairKind==='semantic')task.semanticRepairs=(task.semanticRepairs||0)+1;}
+    const req = { id: crypto.randomUUID(), stage, repairKind, status: 'reserved', createdAt: new Date().toISOString(), promptHash: hash(prompt), prompt, input: structuredClone(input), usage: {input:null,output:null} };
     task.requests.push(req); flow.stage = stage; flow.usage[req.id] = req.usage; update();
     req.status = 'queued'; update();
     try {
@@ -152,7 +165,7 @@ export async function executeV07({ config, messages, problem, engine, seconds, p
         task.budgetAnswer = { ...reply, sourceMessageId: messages.findLast(m=>m.role==='user')?.id, runId: record.id, unappliedReplies: structuredClone(p.unappliedReplies||[]) };
         flow.contract.facts.push({id:'budget-answer-'+task.factVersion,kind:'budget_answer',sourceMessageId:task.budgetAnswer.sourceMessageId,sourceSpan:problem,entityRefs:[],unit:p.budget.unit,value:reply.value??reply.side,status:'active',supersedes:[]});
         flow.contract.bindings.push({factIds:['budget-answer-'+task.factVersion],targetRefs:['gap:'+p.budget.gapId],disposition:'deferred_to_budget_gate',reason:'Validated answer to the current budget question'});task.contract=flow.contract;
-        delete task.pendingBudget; publish(record,{budgetDecision:decision,evidenceReused:true}); return null;
+        delete task.pendingBudget; publish(record,{budgetDecision:decision,evidenceReused:true}); recordAction(task,flow.stage==='complete'?'deliver':'fallback','cached_budget_result'); update(); return null;
       }
       if (reply.status === 'amount') return stop('budget_boundary','预算位于数值边界，现有浮点证据不足以确认。记录保留，需更强证书。','The budget lies on a numerical boundary; stronger evidence is required.');
     }
@@ -239,7 +252,9 @@ export async function executeV07({ config, messages, problem, engine, seconds, p
     for(const resolution of resolutions)for(const q of task.questions.filter(q=>q.gapId===resolution.gapId)){q.status='answered';q.answerSourceMessageId=resolution.sourceMessageId;}
     flow.contract = contract; task.contract = contract; flow.modelingSummary = args.message; methods.modeling = 'executed'; return args;
   };
-  let plan = await request('modeling',researchPrompt(config.language,methods.budget),researchTool,input); if (!plan) return null;
+  const initialRepairKind=task.programmaticFeedback?(task.programmaticFeedback.execution_error?'tool':'programmatic'):task.toolFeedback?'tool':null;
+  let plan = await request(task.programmaticFeedback?'repairing':'modeling',researchPrompt(config.language,methods.budget)+(task.programmaticFeedback?'\n'+evidenceRepairInstruction(task.programmaticFeedback):''),researchTool,input,initialRepairKind); if (!plan) return null;
+  delete task.programmaticFeedback; delete task.toolFeedback;
   candidate = await acceptOrCorrect(plan,'modeling',researchPrompt(config.language,methods.budget),researchTool,input,accept,methods.semantic?1:0); if(!candidate)return null;
   if(compact&&candidate.action==='final'){
     const complete=candidate.final.status!=='uncertain';flow.publicOutcome={...candidate.final,complete,source:'model_final_action'};flow.taskOutcome=complete?'complete':'partial';flow.stage=complete?'complete':'paused';flow.questions=[];
@@ -247,16 +262,39 @@ export async function executeV07({ config, messages, problem, engine, seconds, p
     if(saved){flow.result=solverEvidence(saved);flow.runId=saved.id;answer.provenance.solverRun={id:saved.id,engine:saved.engine,status:saved.status,modelHash:saved.modelHash};flow.resultContract=resultContract(saved,{modelPurpose:'agent_evidence',entities:attempt.entities||[]});}
     const finalCheck=candidate.final.status==='optimal'&&saved?.model?numericalCheck(saved.model,candidate.final.values):null;
     flow.resultContract={...(flow.resultContract||{}),taskOutcome:flow.taskOutcome,finalStatus:candidate.final.status,displayValues:candidate.final.values,values:candidate.final.values,displayValidation:finalCheck,objectiveRecomputed:candidate.final.objective,semanticReviewStatus:'not_run'};answer.content=candidate.message;flow.decision={code:'model_final',summary:candidate.message};methods.modeling='executed';
-    task.questions.filter(q=>['pending','superseded'].includes(q.status)).forEach(q=>q.status='answered');if(complete&&!task.inputs.includes(inputHash(problem)))task.inputs.push(inputHash(problem));update();return null;
+    task.questions.filter(q=>['pending','superseded'].includes(q.status)).forEach(q=>q.status='answered');if(complete&&!task.inputs.includes(inputHash(problem)))task.inputs.push(inputHash(problem));recordAction(task,complete?'deliver':'fallback','model_final');update();return null;
   }
   if(candidate.action==='unsupported') return stop('unsupported',candidate.message,candidate.message,'unsupported');
   if(candidate.action==='clarify') {
+    if(initialRepairKind)return stop('repair_incomplete','程序修模不能改成向用户追问。证据已保存。','A code repair cannot consume user clarification budget.');
     const gaps=candidate.questions.map(q=>contract.gaps.find(g=>g.id===q.gapId));
     return askQuestions(candidate.questions,gaps,candidate.message);
   }
+  // Run on the constructed solver object before paying for a semantic review.
+  // Injected legacy test solvers without audit retain their previous interface.
+  if(evidenceEnabled&&typeof solver.audit!=='function')disableEvidence('Solver audit is unavailable');
+  if(evidenceEnabled&&contract.modelPurpose==='final_task'){
+    for(let pass=0;pass<2;pass++){
+      try {
+        flow.programmaticEvidence=await solver.audit(model,original.map(m=>m.content).join('\n'),signal);
+        if(!flow.programmaticEvidence||flow.programmaticEvidence.diagnostic_error)throw Error(flow.programmaticEvidence?.diagnostic_error||'Audit returned no evidence');
+      } catch(error) { disableEvidence(error); break; }
+      const decision=evidenceDecision(flow.programmaticEvidence,{limits:agentLimits,calls:task.calls,solves:task.solves,clarifications:task.clarifications,repair:methods.repair});
+      (flow.evidenceDecisions||=[]).push({...decision,phase:'static'});update();
+      if(decision.action==='continue')break;
+      if(pass||task.programmaticRepairCount||decision.action!=='repair')return stop('programmatic_unresolved','程序核验仍有疑点，已保留模型与差异明细；未作为正确答案交付。','Deterministic findings remain unresolved; evidence retained without claiming a correct answer.');
+      task.programmaticRepairCount=(task.programmaticRepairCount||0)+1;
+      const repairInput=[{role:'user',content:JSON.stringify({originalMessages:original,...(compact?compactCatalog(original,previousContract):{sourceCatalog:sources}),model,programmaticEvidence:flow.programmaticEvidence})}];
+      const prompt=researchPrompt(config.language,methods.budget)+'\n'+evidenceRepairInstruction(flow.programmaticEvidence);
+      plan=await request('repairing',prompt,researchTool,repairInput,'programmatic');if(!plan)return null;
+      candidate=await acceptOrCorrect(plan,'repairing',prompt,researchTool,repairInput,accept,1);if(!candidate)return null;
+      if(candidate.action!=='solve')return stop('repair_incomplete','修模未返回可核验模型，未消耗追问额度。','Repair did not produce a model; no clarification budget consumed.');
+      methods.repairStatus='executed';
+    }
+  }
   if(methods.semantic) {
     for(let pass=0; pass<2; pass++) {
-      const reviewInput=[{role:'user',content:JSON.stringify({originalMessages:original,...(compact?compactCatalog(original,previousContract):{sourceCatalog:sources}),model,...(compact?{semantics:contract.normalizations?.[0]?.raw,entities:flow.entities}:{contract,targetCatalog:targetCatalog(model,contract.gaps)})})}];
+      const reviewInput=[{role:'user',content:JSON.stringify({originalMessages:original,...(compact?compactCatalog(original,previousContract):{sourceCatalog:sources}),model,...(flow.programmaticEvidence?{programmaticEvidence:flow.programmaticEvidence}:{}),...(compact?{semantics:contract.normalizations?.[0]?.raw,entities:flow.entities}:{contract,targetCatalog:targetCatalog(model,contract.gaps)})})}];
       flow.targetCatalog=targetCatalog(model,contract.gaps);
       const reviewed=await request('reviewing',reviewPrompt(config.language),reviewTool,reviewInput); if(!reviewed)return null;
       const acceptReview = response => {
@@ -273,7 +311,7 @@ export async function executeV07({ config, messages, problem, engine, seconds, p
         task.candidates ||= []; task.candidates.push({model,contract,review:flow.review});
         const repairInput=[{role:'user',content:JSON.stringify({originalMessages:original,...(compact?compactCatalog(original,previousContract):{sourceCatalog:sources}),model,...(compact?{semantics:contract.normalizations?.[0]?.raw,entities:flow.entities}:{contract,targetCatalog:targetCatalog(model,contract.gaps)}),diagnosis:flow.review})}];
         const repairPrompt=researchPrompt(config.language,methods.budget)+'\nMake ONE targeted repair of the anchored semantic mismatches. Preserve all original facts. Never relax conditions to obtain feasibility.';
-        plan=await request('repairing',repairPrompt,researchTool,repairInput); if(!plan)return null;
+        plan=await request('repairing',repairPrompt,researchTool,repairInput,'semantic'); if(!plan)return null;
         candidate=await acceptOrCorrect(plan,'repairing',repairPrompt,researchTool,repairInput,accept,1);if(!candidate)return null;
         if(candidate.action!=='solve')return stop('repair_incomplete','修复未产生完整模型，任务尚未完成。','The repair did not produce a complete model; the task remains incomplete.');
         methods.repairStatus='executed'; continue;
@@ -284,16 +322,40 @@ export async function executeV07({ config, messages, problem, engine, seconds, p
   if(contract.modelPurpose==='budget_threshold_base' && methods.semantic && flow.review?.budgetApplicability!=='supported') return stop('budget_not_supported','预算特例的适用条件未获支持，不能交付阈值结论。','Budget special-case applicability was not supported; no threshold conclusion is delivered.');
   flow.preflight=preflightModel(model); // A conflict is solver evidence, not a request to change the problem.
   const fingerprint=modelFingerprint(model);
-  const reusable=task.attempts.filter(a=>a.fingerprint===fingerprint).map(a=>solver.get(a.runId)).find(r=>{
+  const reusable=task.attempts.filter(a=>(!evidenceEnabled||contract.modelPurpose!=='final_task')&&a.fingerprint===fingerprint).map(a=>solver.get(a.runId)).find(r=>{
     if(!r?.provenance?.solverInvoked||r.status!=='optimal'||r.engine&&r.engine!==engine||modelFingerprint(r.model)!==fingerprint)return false;
     const verified=resultContract(r);return verified.numericCheck?.feasible&&verified.objectiveMatches;
   });
   if(!reusable&&task.solves>=agentLimits.solves)return stop('solver_budget','已达到本题求解上限。','The solver budget for this task is exhausted.');
   task.modelVersion=(task.modelVersion||0)+1; flow.stage=reusable?'checking':'queued';update();
-  const record=reusable||await queuedSolve(solver,{model,engine,seconds,problem:problem.slice(0,12000)},signal,r=>{task.solves++;task.attempts.push({fingerprint,runId:r.id,factVersion:task.factVersion,modelVersion:task.modelVersion,entities:structuredClone(flow.entities||[])});flow.runId=r.id;flow.stage='solving';update();});
+  const allowance=evidenceEnabled&&contract.modelPurpose==='final_task'?Math.max(0,Math.min(2,agentLimits.solves-task.solves-1)):0;
+  const record=reusable||await queuedSolve(solver,{model,engine,seconds,problem:original.map(m=>m.content).join('\n').slice(0,12000),evidence:evidenceEnabled,auxiliarySolveAllowance:allowance,perturb:evidenceEnabled},signal,r=>{task.solves+=1+allowance;task.attempts.push({fingerprint,runId:r.id,factVersion:task.factVersion,modelVersion:task.modelVersion,entities:structuredClone(flow.entities||[]),reservedSolves:1+allowance});flow.runId=r.id;flow.stage='solving';update();});
+  if(!reusable&&(record.programmaticEvidence||record.workerResponseValidated))task.solves-=Math.max(0,allowance-(record.programmaticEvidence?.auxiliary_solves||0));
+  if(record.programmaticEvidence)flow.programmaticEvidence=record.programmaticEvidence;
   const reuseContext=reusable?{evidenceReused:true,reuseReason:'same_mathematics_after_current_validation'}:{};
   if(reusable)flow.evidenceReuse={runId:record.id,fingerprint,modelVersion:task.modelVersion,factVersion:task.factVersion,currentModel:structuredClone(model),semanticReviewStatus:flow.review?.status||'not_run'};
   publish(record,reuseContext); signal.throwIfAborted();
+  if(evidenceEnabled&&['error','rejected'].includes(record.status)&&!task.programmaticRepairCount&&methods.repair&&task.calls+2<=agentLimits.calls&&task.solves<agentLimits.solves){
+    task.programmaticRepairCount=1;task.programmaticFeedback={execution_error:record.error,status:record.status};task.technicalFailure=true;methods.repairStatus='executed';
+    return executeV07({config,messages,problem,engine,seconds,planner,solver,signal,answer,update,retry:true,compact});
+  }
+  if(evidenceEnabled&&record.programmaticEvidence?.diagnostic_error)disableEvidence(record.programmaticEvidence.diagnostic_error);
+  if(evidenceEnabled&&record.programmaticEvidence&&contract.modelPurpose==='final_task'){
+    const e=record.programmaticEvidence, decision=evidenceDecision(e,{status:record.status,review:flow.review?.status,calls:task.calls,solves:task.solves,clarifications:task.clarifications,limits:agentLimits,repair:methods.repair});
+    (flow.evidenceDecisions||=[]).push({...decision,phase:'postsolve'});update();
+    if(decision.action==='repair'&&!task.programmaticRepairCount){
+      task.programmaticRepairCount=1;task.programmaticFeedback=e;task.technicalFailure=true;methods.repairStatus='executed';
+      return executeV07({config,messages,problem,engine,seconds,planner,solver,signal,answer,update,retry:true,compact});
+    }
+    if(decision.action==='clarify'){
+      const factId='solver-anomaly-'+task.modelVersion,gap={id:factId,factId,kind:'solver_anomaly',status:'open',questionId:null};
+      contract.facts.push({id:factId,kind:'solver_anomaly',value:null,unit:'',status:'unresolved',supersedes:[],sourceMessageId:original.at(-1).id,sourceSpan:original.at(-1).content,sourceEvidence:[{messageId:original.at(-1).id,text:original.at(-1).content}]});
+      contract.gaps.push(gap);contract.bindings.push({factIds:[factId],targetRefs:['gap:'+gap.id],disposition:'pending_clarification',reason:'Solver anomaly needs confirmation of business conditions'});
+      const question=evidenceQuestion(e,record.status);
+      return askQuestions([{field:'业务边界与冲突条件',question,impact:'确认题面条件，不擅自放宽模型。'}],[gap],question);
+    }
+    if(decision.action==='fallback'||decision.action==='repair')return stop('programmatic_fallback','预算内无法消除程序核验疑点。已保留求解证据，结果仅供复核，不标记为已验证正确。','Evidence remains unresolved within budget. Saved results are provisional, not verified correct.');
+  }
   if(!record.provenance?.solverInvoked || !['optimal','infeasible','unbounded','time_limit'].includes(record.status) || record.values && (!flow.resultContract.numericCheck?.feasible||!flow.resultContract.objectiveMatches)){
     const numericFailure=record.provenance?.solverInvoked&&record.status==='optimal'&&record.values&&(!flow.resultContract.numericCheck?.feasible||!flow.resultContract.objectiveMatches);
     if(numericFailure&&methods.repair&&!task.toolRepairCount&&task.calls+2<=agentLimits.calls&&task.solves<agentLimits.solves){
@@ -321,5 +383,6 @@ export async function executeV07({ config, messages, problem, engine, seconds, p
     flow.taskOutcome=flow.resultContract.taskOutcome;task.contract=structuredClone(contract);
     if(flow.decision)flow.decision.summary=answer.content;update();
   }
+  recordAction(task,flow.stage==='complete'?'deliver':'fallback','final_result');update();
   return null;
 }

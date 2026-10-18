@@ -4,6 +4,9 @@ import sys
 import math
 import time
 import importlib.metadata
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from evidence import inspect_model, postsolve
 
 
 def emit(value):
@@ -36,6 +39,9 @@ def solve(request):
     for constraint in data['constraints']:
         lhs, rhs = expr(constraint['terms']), constraint['rhs']
         model.constraints.add(lhs <= rhs if constraint['sense'] == '<=' else lhs >= rhs if constraint['sense'] == '>=' else lhs == rhs)
+    evidence = inspect_model(model, data, request.get('problem', '')) if request.get('evidence', True) else None
+    if request.get('mode') == 'audit':
+        return {'status': 'unknown', 'programmaticEvidence': evidence}
     engine = request['engine']
     solver = pyo.SolverFactory('gurobi_direct', manage_env=True) if engine == 'gurobi' else pyo.SolverFactory('appsi_highs')
     try:
@@ -53,9 +59,17 @@ def solve(request):
             model.solutions.load_from(results)
             values = {name: finite(model.x[name].value) for name in model.x}
             objective = finite(pyo.value(model.objective, exception=False))
-        return {'status': status, 'termination': termination, 'objective': objective, 'values': values,
+        result = {'status': status, 'termination': termination, 'objective': objective, 'values': values,
                 'bound': finite(results.problem.upper_bound if data['sense'] == 'maximize' else results.problem.lower_bound),
                 'versions': {name: importlib.metadata.version(name) for name in ['pyomo', 'gurobipy' if engine == 'gurobi' else 'highspy']}}
+        if evidence is not None:
+            allowance = max(0, min(2, int(request.get('auxiliarySolveAllowance', 0))))
+            try:
+                postsolve(evidence, model, data, result, solver, allowance, request.get('perturb', False))
+            except Exception as error:
+                evidence['diagnostic_error'] = str(error)[:500]
+            result['programmaticEvidence'] = evidence
+        return result
     finally:
         if engine == 'gurobi':
             solver.close()

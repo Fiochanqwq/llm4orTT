@@ -19,7 +19,7 @@ export class Store {
     // Add preferences to existing workspaces without moving records or touching keys.
     this.data.preferences ||= {}; this.data.providers ||= {};
     this.data.preferences.language = this.data.preferences.language === 'en' ? 'en' : 'zh-CN';
-    if(!Object.hasOwn(methodPresets,this.data.preferences.methodPreset))this.data.preferences.methodPreset='full';
+    if(!Object.hasOwn(methodPresets,this.data.preferences.methodPreset)||this.data.preferences.methodPreset==='no_evidence')this.data.preferences.methodPreset='full';
     if(typeof this.data.preferences.protocolCorrection!=='boolean')this.data.preferences.protocolCorrection=true;
     if(!['system','calibri','times','arial','georgia','verdana'].includes(this.data.preferences.readingFont))this.data.preferences.readingFont='system';
     if (!Number.isInteger(this.data.preferences.fontSize) || this.data.preferences.fontSize < 14 || this.data.preferences.fontSize > 24) this.data.preferences.fontSize = 18;

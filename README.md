@@ -30,3 +30,5 @@ Windows 现有工程入口见 [README.txt](README.txt)。新克隆的工程先�
 `npm run test:ci` 运行不依赖研究数据的测试。CI 同时检查 Windows 构建和 Linux 在线环境，Linux 作业还运行真实 HiGHS 求解与启动入口检查。
 
 `npm test` 是完整本地回归，其中部分测试需要未上传的实验材料和历史 baseline。更多说明见 [GitHub 配置说明](docs/GITHUB_SETUP.txt)。
+
+程序化求解证据、预算路由与无人值守分层配对实验见 [程序化证据说明](docs/PROGRAMMATIC_EVIDENCE.md)。

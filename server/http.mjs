@@ -103,7 +103,7 @@ export async function startServer({ directory, staticDir, port = 43127, dev = fa
         if (value.fontSize !== undefined && (!Number.isInteger(value.fontSize) || value.fontSize < 14 || value.fontSize > 24)) throw new Error('字号应为 14–24');
         if (value.chatMode !== undefined && !['solve', 'chat'].includes(value.chatMode)) throw new Error('请选择有效的对话模式');
         if (value.chatEngine !== undefined && !['highs', 'gurobi'].includes(value.chatEngine)) throw new Error('请选择有效的求解器');
-        if (value.methodPreset !== undefined && !Object.hasOwn(methodPresets,value.methodPreset)) throw new Error('请选择有效的方法预设');
+        if (value.methodPreset !== undefined && (!Object.hasOwn(methodPresets,value.methodPreset)||value.methodPreset==='no_evidence')) throw new Error('请选择有效的交互式方法预设');
         if (value.protocolCorrection !== undefined && typeof value.protocolCorrection !== 'boolean') throw new Error('请选择有效的协议纠正开关');
         if (value.readingFont !== undefined && !['system','calibri','times','arial','georgia','verdana'].includes(value.readingFont)) throw new Error('请选择有效字体');
         for (const key of ['theme', 'provider', 'sidebarCollapsed', 'language', 'fontSize', 'chatMode', 'chatEngine','methodPreset','readingFont','protocolCorrection']) if (value[key] !== undefined) store.data.preferences[key] = value[key];

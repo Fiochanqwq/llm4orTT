@@ -1,0 +1,7 @@
+{
+  "scripts/run-evidence-benchmark.mjs": "44bd9c2146e6749cc76eee09320ad12d363e7cd9ee4da18e8a5791d6779fd11e",
+  "scripts/verify-evidence.mjs": "233f62258d7a180e07492f5e22ca4f05546422fd8375cef650ba8d7732339436",
+  "scripts/analyze-evidence-benchmark.py": "6c8541fc8b13a04c607e4aeed915d1b3bd659d9ffa838eff3e04ab3ba6b56563",
+  "scripts/fixtures/evidence-benchmark.mjs": "5a2d16e51902c37590810be02440dab6bdcb001cfaea24cafa666c5dc1638d60",
+  "scripts/fixtures/compact-v074.mjs": "1e7f4b8ac8362b76378dc374c0372bf3ede08ac6410b430f43d17b4c279ba329"
+}

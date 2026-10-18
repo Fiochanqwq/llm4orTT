@@ -4,13 +4,11 @@ import fs from 'node:fs';
 import { atomicJson, StorageError } from './persistence.mjs';
 import path from 'node:path';
 import crypto from 'node:crypto';
-import { fileURLToPath } from 'node:url';
+import { resourceRoot, solverPython } from './python-runtime.mjs';
 import { spawn } from 'node:child_process';
 import { validateModel, pyomoSource } from '../shared/solver-model.mjs';
 
-const appRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const resourceRoot = appRoot.endsWith('app.asar') ? path.dirname(appRoot) : appRoot;
-const bundledPython = path.join(resourceRoot, process.platform === 'win32' ? 'runtime/python/python.exe' : 'runtime/python/bin/python');
+const bundledPython = solverPython();
 const worker = path.join(resourceRoot, 'solver/worker.py');
 const terminal = new Set(['optimal', 'infeasible', 'unbounded', 'infeasible_or_unbounded', 'time_limit', 'unknown', 'error', 'rejected', 'unavailable', 'stopped', 'interrupted', 'output_limit']);
 
@@ -51,6 +49,29 @@ export class SolverService {
   }
   list() { return [...this.jobs.values()].sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(0, 30).map(({ id, createdAt, status, engine, name, objective, durationMs }) => ({ id, createdAt, status, engine, name, objective, durationMs })); }
   get(id) { return this.jobs.get(id); }
+  async audit(model, problem, signal) {
+    signal?.throwIfAborted();
+    validateModel(model);
+    if(typeof problem!=='string'||problem.length>24000)throw Error('Invalid audit prompt');
+    return new Promise((resolve,reject)=>{
+      const child=spawn(bundledPython,['-I','-X','utf8','-B',worker],{windowsHide:true,stdio:['pipe','pipe','pipe']});
+      let output='',errors='';
+      const cancel=()=>child.kill(), cleanup=()=>{clearTimeout(timer);signal?.removeEventListener('abort',cancel);}, timer=setTimeout(cancel,15000);
+      signal?.addEventListener('abort',cancel,{once:true});
+      child.stdout.on('data',b=>{output+=b;if(output.length>2_000_000)cancel();});
+      child.stderr.on('data',b=>{errors=(errors+b).slice(-2000);});
+      child.on('error',error=>{cleanup();reject(error);});child.stdin.on('error',()=>{});
+      child.on('close',code=>{cleanup();try{
+        signal?.throwIfAborted();const marker=output.lastIndexOf('LLM4OR_RESULT=');
+        if(code!==0||marker<0)throw Error(errors||'Audit worker exited without a valid result');
+        const result=parseSolverResponse(output.slice(marker+14).trim(),model);
+        if(!result.programmaticEvidence)throw Error(result.error||errors||'Audit failed');
+        resolve(result.programmaticEvidence);
+      }catch(error){reject(error);}});
+      if(signal?.aborted)cancel();
+      child.stdin.end(JSON.stringify({mode:'audit',model,problem}));
+    });
+  }
   start(input) {
     if(this.storageError)throw this.storageError;
     if (this.active) throw Error('当前已有求解任务');
@@ -58,6 +79,7 @@ export class SolverService {
     this.jobs.set(record.id, record);
     try {
       record.model = validateModel(input.model);
+      if(input.auxiliarySolveAllowance!==undefined&&(!Number.isInteger(input.auxiliarySolveAllowance)||input.auxiliarySolveAllowance<0||input.auxiliarySolveAllowance>2))throw Error('Invalid diagnostic solve allowance');
       record.modelHash = crypto.createHash('sha256').update(JSON.stringify(record.model)).digest('hex');
       if (input.problem !== undefined && (typeof input.problem !== 'string' || input.problem.length > 12000)) throw Error('Invalid problem text');
       record.problem = input.problem || '';
@@ -86,12 +108,12 @@ export class SolverService {
     this.active = { id: record.id, child };
     child.once('spawn', () => { record.provenance.workerStarted = true; record.provenance.startedAt = new Date().toISOString(); });
     let reason, output = '', finished = false;
-    const timer = setTimeout(() => { reason = 'time_limit'; child.kill(); }, (input.seconds + 15) * 1000);
+    const timer = setTimeout(() => { reason = 'time_limit'; child.kill(); }, (input.seconds * (1+(input.auxiliarySolveAllowance||0)) + 15) * 1000);
     const finish = error => {
       if (finished) return; finished = true; clearTimeout(timer); this.active = null;
       const marker = output.lastIndexOf('LLM4OR_RESULT=');
       if (marker >= 0) {
-        try { const result = parseSolverResponse(output.slice(marker + 14).split(/\r?\n/)[0], record.model); Object.assign(record, result); } catch { record.status = 'error'; record.error = 'Invalid solver response.'; }
+        try { const result = parseSolverResponse(output.slice(marker + 14).split(/\r?\n/)[0], record.model); Object.assign(record, result); record.workerResponseValidated=true; } catch { record.status = 'error'; record.error = 'Invalid solver response.'; }
         record.log = output.slice(0, marker).replace(/^LLM4OR_SOLVER_INVOKED=.*\r?\n/gm, '').trim();
       } else { record.status = 'error'; record.log = output.trim(); record.error = error?.message || 'Solver exited without a result.'; }
       if (reason) { record.status = reason; record.values = null; record.objective = null; record.error = reason==='error'?'Solver process exited abnormally.':null; }
@@ -102,7 +124,7 @@ export class SolverService {
     const collect = chunk => { output += chunk.toString('utf8'); if (output.includes('LLM4OR_SOLVER_INVOKED=' + input.engine + '\n') || output.includes('LLM4OR_SOLVER_INVOKED=' + input.engine + '\r\n')) record.provenance.solverInvoked = true; if (output.length > 2_000_000) { output = output.slice(0, 2_000_000); reason = 'output_limit'; child.kill(); } record.log = output.slice(-32000); };
     child.stdout.on('data', collect); child.stderr.on('data', collect);
     child.on('error', finish); child.on('close', (code, signal) => { record.provenance.exitCode=code;record.provenance.exitSignal=signal;if(code!==0&&!reason){reason='error';}finish(); }); child.stdin.on('error', () => {});
-    try { child.stdin.end(JSON.stringify({ model: record.model, engine: input.engine, seconds: input.seconds })); } catch { }
+    try { child.stdin.end(JSON.stringify({ model: record.model, engine: input.engine, seconds: input.seconds, problem:record.problem, evidence:input.evidence!==false, auxiliarySolveAllowance:input.auxiliarySolveAllowance||0, perturb:input.perturb===true })); } catch { }
     this.active.stop = () => { reason = 'stopped'; child.kill(); };
     return record;
   }

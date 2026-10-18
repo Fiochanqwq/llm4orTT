@@ -1,0 +1,29 @@
+{
+  "kind": "controlled_fault_injection_not_live_llm",
+  "variantsPerBase": 2,
+  "pairedUnit": "baseId (two parameter variants clustered)",
+  "presets": [
+    "structure",
+    "no_evidence",
+    "full"
+  ],
+  "limits": {
+    "calls": 4,
+    "solves": 2,
+    "clarifications": 2,
+    "questions": 3,
+    "inputCharacters": 24000,
+    "modelTokens": 327680,
+    "explanationTokens": 327680,
+    "seconds": 30
+  },
+  "seed": 20261018,
+  "review": "Frozen no-issue review to test errors missed by semantic review",
+  "repair": "Frozen correct candidate returned only when controller explicitly requests repair",
+  "providerCalls": 0,
+  "primaryOutcome": "correctDelivery",
+  "secondaryOutcome": "correctFirstDecision",
+  "tests": "Two-sided exact McNemar on all-variants-success per base; Wilcoxon on base-mean budget differences; Holm within each test family",
+  "injectionHash": "8eeda7c534b211cd9732a8e89266184d698d639c15178dd9f7c2abd580eb7304",
+  "helper": "DeepSeek generated independent math suggestions only; all used cases constructed locally and independently checked"
+}

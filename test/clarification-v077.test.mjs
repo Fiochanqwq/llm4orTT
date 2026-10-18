@@ -72,7 +72,7 @@ test('saved two-turn trajectory completes using explicit correction, semantic re
     }
     assert.equal(config.tool.name,'review_optimization');return reviewed();
   },{solver});
-  assert.ifError(h.error);assert.equal(h.answer.automation.stage,'complete');assert.equal(h.answer.automation.task.protocolCorrections,1);
+  assert.ifError(h.error);assert.equal(h.answer.automation.stage,'complete',JSON.stringify(h.answer.automation.programmaticEvidence));assert.equal(h.answer.automation.task.protocolCorrections,1);
   assert.equal(h.calls,4);assert.equal(h.answer.automation.task.solves,1);assert.equal(h.answer.automation.publicOutcome.objective,15);
   assert.equal(h.answer.automation.methods.semanticReview,'executed');assert.equal(h.answer.automation.resultContract.solverInvoked,true);
   assert.ok(h.answer.automation.gapResolutions[0].sourceMessageId===f.messages[1].id);

@@ -46,7 +46,16 @@ jobs:
         run: node scripts/setup-codespace.mjs
       - run: npm run test:ci
       - name: Exercise real HiGHS solver
-        run: node --test test/solver.test.mjs
+        run: node --test test/solver.test.mjs test/evidence.test.mjs
+      - name: Reproduce and verify controlled evidence benchmark
+        run: npm run verify:evidence -- qa/evidence-ci
+      - name: Preserve reproducible evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: evidence-verification-${{ github.sha }}
+          path: qa/evidence-ci
+          if-no-files-found: error
       - name: Verify browser launcher and restart
         env:
           CODESPACES: 'true'

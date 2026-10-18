@@ -11,6 +11,7 @@ import { trajectoryState, summarizeRuns } from './research-metrics.mjs';
 import { respondToQuestions, questionsFromText, environmentVersion } from './experiment-environment.mjs';
 import { scoreOriginalTask, scorerVersion, publicOutcome } from './independent-scoring.mjs';
 import { executionSnapshot } from './execution-snapshot.mjs';
+import { decisionMetrics } from './decision-metrics.mjs';
 export const digest = x => crypto.createHash('sha256').update(typeof x==='string'?x:JSON.stringify(x)).digest('hex');
 const uuid=()=>crypto.randomUUID(), now=()=>new Date().toISOString();
 const safeId=id=>typeof id==='string'&&/^[a-f0-9-]{36}$/.test(id);
@@ -39,7 +40,7 @@ export function scoreRun(run, card, referenceAsset=null) {
     originalTaskCorrect:null,semanticCorrect:null,displayFeasible:result?.displayValidation?.feasible??null,
     solverFeasible:result?.numericCheck?.feasible??last?.result?.check?.feasible??null,
     calls:last?.task.calls??run.events?.filter(e=>['reserved','sent','completed','failed','cancelled_unknown'].includes(e.state)).length??0,solves:last?.task.solves??0,clarifications:last?.task.clarifications??0,
-    protocolCorrections:last?.task.protocolCorrections??0,semanticRepairs:last?.task.semanticRepairs??(last?.methods?.repairStatus==='executed'?1:0),toolRepairs:last?.task.toolRepairCount??0,
+    protocolCorrections:last?.task.protocolCorrections??0,...decisionMetrics(last?.task),
     executionStatus:run.status,semanticReviewStatus:last?.review?.status??'not_run',
     taskOutcome:['failed','cancelled','interrupted_unknown'].includes(run.status)?'failed':run.status!=='complete'?run.status:outcome.complete?'complete':'unknown',cost:null,requiresHumanReview:true};
 }
@@ -90,11 +91,12 @@ export class ExperimentService {
     config.language=data.language==='en'?'en':'zh-CN';
     if(data.protocolCorrection!==undefined&&typeof data.protocolCorrection!=='boolean')throw Error('协议纠正开关无效');
     config.protocolCorrection=data.protocolCorrection!==false;
+    config.unattended=data.unattended!==false;
     const engine=data.engine||'highs';if(!['highs','gurobi'].includes(engine))throw Error('请选择有效求解器');
     const b={id:uuid(),title:String(data.title||'Research batch').slice(0,150),createdAt:now(),status:'draft',cases,
       datasetHash:digest(cases.map(c=>({id:c.id,hash:c.hash}))),privateCardHash:digest(cases.map(c=>c.privateCard)),frozen:frozenConfig(config,engine,null),methodVersion,methodSnapshot:Object.fromEntries(presets.map(p=>[p,methodPresets[p]||{label:'Native API, no tools'}])),configHash:digest(frozenConfig(config,engine,null)),limits:agentLimits,
       environmentVersion,scorerVersion,sourceSnapshot:executionSnapshot(),entry:data.entry==='cli'?'cli':'workbench',referenceHash:digest(cases.map(c=>c.privateReference)),estimatedMaximumRequests:cases.length*presets.length*repeats*agentLimits.calls,
-      scheduleSeed:seed,modelSeed:null,requestCap,requestCount:0,retries:0,concurrency:1,rateIntervalMs:1000,timeoutMs:300000,runs:[],source:this.runner?'injected_test_runner':'provider_api'};
+      scheduleSeed:seed,modelSeed:null,requestCap,requestCount:0,retries:0,concurrency:1,rateIntervalMs:1000,timeoutMs:300000,unattended:data.unattended!==false,runs:[],source:this.runner?'injected_test_runner':'provider_api'};
     for(const c of cases)for(const preset of presets)for(let repeat=0;repeat<repeats;repeat++)b.runs.push({id:uuid(),caseId:c.id,baseId:c.baseId,preset,repeat,status:'queued'});
     let state=seed>>>0;for(let i=b.runs.length-1;i>0;i--){state=(Math.imul(state,1664525)+1013904223)>>>0;const j=state%(i+1);[b.runs[i],b.runs[j]]=[b.runs[j],b.runs[i]];}
     this.batches.set(b.id,b);this.save(b);return this.view(b.id);
@@ -162,13 +164,13 @@ export class ExperimentService {
         run.events.push({id:uuid(),state:'environment_decision',...response,createdAt:now()});
         if(response.status!=='answered'){
           if(response.reply){conversation.messages.push({id:uuid(),role:'user',content:response.reply,status:'complete',createdAt:now()});run.events.push({id:uuid(),state:'controller_reply',content:response.reply,factHash:response.factHash,createdAt:now()});}
-          run.status='awaiting_human';run.environmentFailure={code:'UNSUPPORTED_OR_AMBIGUOUS_QUESTION',questions:response.unanswered};return;
+          run.status=b.unattended?'partial':'awaiting_human';run.environmentFailure={code:b.unattended?'UNATTENDED_CLARIFICATION_RECORDED':'UNSUPPORTED_OR_AMBIGUOUS_QUESTION',questions:response.unanswered};return;
         }
         run.events.push({id:uuid(),state:'controller_reply',content:response.reply,questionIds:questions.map(q=>q.id).filter(Boolean),factHash:response.factHash,createdAt:now()});message=response.reply;continue;
       }
       return;
     }
-    run.status='awaiting_human';
+    run.status=b.unattended?'partial':'awaiting_human';
   }
   answer(batchId,runId,message){const b=this.batches.get(batchId),meta=b?.runs.find(r=>r.id===runId),run=meta&&this.run(runId);if(!run||meta.status!=='awaiting_human'||typeof message!=='string'||!message.trim()||message.length>24000)throw Error('输入答复或运行状态无效');run.humanReply=message.trim();(run.events||=[]).push({id:uuid(),state:'human_reply',content:message.trim(),createdAt:now(),reviewMode:'human_answer_presentation_not_verified'});delete run.environmentFailure;run.status='queued';this.saveRun(run);meta.status='queued';this.save(b);return {ok:true};}
   evaluate(batchId,runId,value){const b=this.batches.get(batchId),meta=b?.runs.find(r=>r.id===runId),run=meta&&this.run(runId);if(!run||!['correct','incorrect','uncertain'].includes(value.verdict)||typeof value.note!=='string'||!value.note.trim()||value.note.length>4000)throw Error('输入评分无效');if(value.verdict==='correct'&&run.status!=='complete')throw Error('任务未完成，不能标为完整正确；请记录未完成原因或待复核。');run.manualEvaluations||=[];run.manualEvaluations.push({id:uuid(),version:'manual-2',verdict:value.verdict,note:value.note,at:now()});run.manualVerdict=value.verdict;this.saveRun(run);meta.manualVerdict=value.verdict;this.save(b);return run;}
