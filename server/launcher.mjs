@@ -62,7 +62,7 @@ export function openBrowser(url) {
 }
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   ensureService().then(service => {
-    console.log('llm4orOvO · ' + service.origin);
+    console.log('llm4orTT · ' + service.origin);
     if (process.argv.includes('--browser')) openBrowser(service.origin + '/#token=' + service.token);
     if (service.owned) for (const signal of ['SIGINT', 'SIGTERM']) process.once(signal, async () => { await service.close(); service.cleanup(); process.exit(0); });
   }).catch(error => { console.error(error.message); process.exit(1); });

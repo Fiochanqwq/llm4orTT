@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 const root = process.cwd(), lock = JSON.parse(fs.readFileSync('package-lock.json', 'utf8'));
-const output = [`llm4orOvO ${lock.version} · Third-party notices`, 'Generated from installed package versions. App code and original Saturn artwork are project-authored.', 'System Calibri and SimHei font files are not redistributed.', ''];
+const output = [`llm4orTT ${lock.version} · Third-party notices`, 'Generated from installed package versions. App code and original Saturn artwork are project-authored.', 'System Calibri and SimHei font files are not redistributed.', ''];
 const summary = [];
 for (const [relative, data] of Object.entries(lock.packages).sort()) {
   if (!relative || !relative.includes('node_modules/')) continue;
@@ -14,7 +14,7 @@ for (const [relative, data] of Object.entries(lock.packages).sort()) {
 }
 const electronLicense = path.join(root, 'node_modules/electron/dist/LICENSE');
 if (fs.existsSync(electronLicense)) output.push('\nELECTRON RUNTIME LICENSE\n', fs.readFileSync(electronLicense, 'utf8'));
-output.push('\nChromium and Electron runtime notices are also distributed alongside llm4orOvO.exe in LICENSE.electron.txt and LICENSES.chromium.html.');
+output.push('\nChromium and Electron runtime notices are also distributed alongside llm4orTT.exe in LICENSE.electron.txt and LICENSES.chromium.html.');
 function solverNotices(directory) {
   for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
     const file = path.join(directory, entry.name);

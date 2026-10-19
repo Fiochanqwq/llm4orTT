@@ -1,0 +1,59 @@
+name: Windows Release
+on:
+  push:
+    tags: ['v*']
+permissions:
+  contents: read
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - name: Validate release version
+        shell: pwsh
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          $pkg = Get-Content package.json -Raw | ConvertFrom-Json
+          $tagVersion = $env:RELEASE_TAG -replace '^v', ''
+          if ($tagVersion -match '^\d+\.\d+$') { $tagVersion += '.0' }
+          if ($tagVersion -ne $pkg.version) { throw 'Tag and package version differ' }
+      - run: npm ci --no-audit --no-fund
+      - run: npm run solver:prepare
+      - run: npm test
+      - run: npm run test:inverse
+      - run: npm run test:research
+      - run: npm run package
+      - run: npm run qa:desktop
+      - name: Verify bundled provider code
+        shell: pwsh
+        run: |
+          $env:FYPPPPP_TEST_BUNDLE = '1'
+          node --test test/providers.test.mjs
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Archive and publish
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          $version = (Get-Content package.json -Raw | ConvertFrom-Json).version
+          $zip = "llm4orTT-$env:RELEASE_TAG-windows-x64.zip"
+          Compress-Archive -LiteralPath "release/$version/win-unpacked" -DestinationPath $zip -CompressionLevel Optimal
+          $hash = (Get-FileHash -LiteralPath $zip -Algorithm SHA256).Hash.ToLowerInvariant()
+          "$hash  $zip" | Set-Content -LiteralPath SHA256SUMS.txt -Encoding ascii
+          gh release create $env:RELEASE_TAG $zip SHA256SUMS.txt --verify-tag --draft --title "llm4orTT $env:RELEASE_TAG" --notes-file CHANGELOG.md
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          gh release edit $env:RELEASE_TAG --draft=false
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

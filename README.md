@@ -1,34 +1,48 @@
-# llm4orOvO
+# llm4orTT
 
-自然语言优化建模、聊天与实验工作台。源码仓库保持私有。
+[![CI](https://github.com/Fiochanqwq/llm4orTT/actions/workflows/ci.yml/badge.svg)](https://github.com/Fiochanqwq/llm4orTT/actions/workflows/ci.yml)
 
-## 在 GitHub 打开使用，无需本地下载
+**0.1** · 普通对话与上下文逆优化工作台。程序与 npm 元数据使用标准版本号 `0.1.0`。
 
-**[点击创建在线工作区](https://codespaces.new/Fiochanqwq/llm4orOvO?quickstart=1)**
+从运营日志和历史决策中恢复优化模型的隐藏权重，用稀疏正则化筛选候选假设。内置示例可在本地运行，无需 API 密钥。
 
-1. 登录拥有此仓库访问权限的 GitHub 账号，点击上面的链接并创建 Codespace。也可以从 **Code → Codespaces → Create codespace on main** 进入。
-2. 等待首次环境准备完成：自动安装依赖、Python/HiGHS 并构建网页，通常需要几分钟。
-3. 打开启动任务的终端，点击输出的完整 `https://…app.github.dev/#token=…` 链接。若没有看到链接，在终端输入 **`npm run codespace`**；重复执行会连接已运行的服务。
-4. 在网页设置里填写自己的模型 API Key，选择 HiGHS，即可开始使用。
+## Windows 使用
 
-Ports 面板中的 **43127 端口保持 Private**。从 Ports 直接打开的地址不带应用访问令牌，请使用终端输出的完整链接；不要分享这个链接。若旧链接失效，再运行 `npm run codespace` 获取当前链接。
+从 [Releases](https://github.com/Fiochanqwq/llm4orTT/releases) 下载 Windows x64 压缩包，完整解压后运行 `llm4orTT.exe`。`Browser.cmd` 可打开浏览器界面。请保留随包提供的 `resources` 目录。
 
-下次从 [你的 Codespaces 列表](https://github.com/codespaces) 打开已有工作区，不需要重新创建。停止后重新打开会启动服务。使用完可在该列表停止环境；Codespaces 的可用额度和计费以你的 GitHub 账户为准。
+默认进入普通对话，支持多轮上下文、历史记录、停止、重试、搜索、重命名、复制、文本附件和导出。在“设置”中选择服务商并保存密钥。顶部“逆优化工作台”中的“运行三步重构”运行真实本地求解器。原有本地配置与聊天仍可读取。
 
-## 数据与密钥
+## DeepSeek 新旧版本
 
-- 在线环境从空白开始，不包含本机实验数据、baseline 或历史对话。
-- 云端新数据保存在 `.local/codespace-workspace/`，已被 Git 忽略，不随提交上传。
-- API Key 使用 AES-256-GCM 加密，保护密钥文件仅允许工作区用户读写。它保护落盘文件，不隔离拥有该 Codespace 完整权限的人。
-- 停止并重开同一个 Codespace 会保留工作区文件；删除 Codespace 会丢失其中未另行备份的数据。重要结果请使用应用导出功能备份。
-- Windows 桌面版继续使用原来的 DPAPI 密钥保护。云端默认提供 HiGHS；Gurobi 需要另行安装和许可。
+默认使用最新官方入口 `deepseek-flash`。内置 V4 Pro、V4 兼容别名、历史 Chat/Reasoner/Coder、V2、V2.5、V3、R1、V3.1、V3.2 系列候选 ID，同时允许手填任何前缀、日期快照和新型号。
 
-## 本地运行与验证
+在设置中选择 DeepSeek、填写密钥，点击“刷新可用模型”，再选择模型并“测试连接”。旧模型或自部署服务可在高级设置中填写提供该型号的 OpenAI Chat Completions 兼容 HTTPS 地址。程序按代际适配参数，不会自动替换模型。
 
-Windows 现有工程入口见 [README.txt](README.txt)。新克隆的工程先执行 `npm ci`、`npm run build`，求解环境需单独准备。
+预设 ID 只是填写提示；可用性以接口实际提供的模型为准。官方已下线的版本需要仍托管它的服务，官方兼容别名也可能被路由到新模型。详情见 [兼容说明](docs/DEEPSEEK_COMPATIBILITY.md)。
 
-`npm run test:ci` 运行不依赖研究数据的测试。CI 同时检查 Windows 构建和 Linux 在线环境，Linux 作业还运行真实 HiGHS 求解与启动入口检查。
+## 源码运行与验证
 
-`npm test` 是完整本地回归，其中部分测试需要未上传的实验材料和历史 baseline。更多说明见 [GitHub 配置说明](docs/GITHUB_SETUP.txt)。
+需要 Node.js 24 或更新版本。Windows 脚本会下载固定的嵌入式 Python；Linux/macOS 还需要 Python 3.13 和 venv 支持。首次安装需要联网。
 
-程序化求解证据、预算路由与无人值守分层配对实验见 [程序化证据说明](docs/PROGRAMMATIC_EVIDENCE.md)。
+```sh
+npm ci
+npm run solver:prepare
+npm run build
+npm start
+npm test
+npm run test:inverse
+npm run test:research
+npm run benchmark:inverse
+```
+
+Windows 桌面使用 `npm run desktop` 或 `Start-Desktop.cmd`；开发前端使用 `npm run dev`。Windows 打包：`npm run package`，输出 `release/0.1.0/win-unpacked/llm4orTT.exe`。浏览器与桌面验收：`npm run qa:browser`、`npm run qa:desktop`。
+
+GitHub Actions 对推送与 PR 执行构建、接口和真实求解器测试。版本标签 `v0.1` 会额外构建 Windows 包、验证打包后程序，并发布 ZIP 和 SHA256 校验文件。见 [贡献指南](CONTRIBUTING.md) 和 [发布记录](CHANGELOG.md)。
+
+## 数据与研究边界
+
+密钥、聊天、实验输出、模型文件、运行时与安装包不进入 Git；安装包通过 Releases 分发。启用大模型会把当前任务数据发送到所选接口。离线复算需单独归档的实验数据，见 [复现说明](research/REPRODUCE.txt)。
+
+实现边界与实验协议见 [研究说明](docs/CONTEXTUAL_INVERSE.md)。当前内置评测是合成排班数据，不代表已完成 NLP4LP 全量评测。新方向代码位于 `server/inverse.mjs`、`solver/inverse.py` 和 `src/Inverse.tsx`。
+
+原始代码保留全部权利，见 [LICENSE](LICENSE)。第三方依赖许可见 [THIRD_PARTY_NOTICES.txt](THIRD_PARTY_NOTICES.txt)。

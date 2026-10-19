@@ -108,7 +108,23 @@
       "deepseek-flash",
       "deepseek-v4-pro",
       "deepseek-v4-flash",
-      "deepseek-v4-flash-vision-exp"
+      "deepseek-v4-flash-vision-exp",
+      "deepseek-chat",
+      "deepseek-reasoner",
+      "deepseek-coder",
+      "deepseek-ai/DeepSeek-V2-Chat",
+      "deepseek-ai/DeepSeek-Coder-V2-Instruct",
+      "deepseek-ai/DeepSeek-V2.5",
+      "deepseek-ai/DeepSeek-V2.5-1210",
+      "deepseek-ai/DeepSeek-V3",
+      "deepseek-ai/DeepSeek-V3-0324",
+      "deepseek-ai/DeepSeek-R1",
+      "deepseek-ai/DeepSeek-R1-0528",
+      "deepseek-ai/DeepSeek-V3.1",
+      "deepseek-ai/DeepSeek-V3.1-Terminus",
+      "deepseek-ai/DeepSeek-V3.2-Exp",
+      "deepseek-ai/DeepSeek-V3.2",
+      "deepseek-ai/DeepSeek-V3.2-Speciale"
     ],
     "regions": [
       {
@@ -118,7 +134,7 @@
       }
     ],
     "docs": "https://api-docs.deepseek.com/",
-    "checkedAt": "2026-10-18",
+    "checkedAt": "2026-10-19",
     "listModels": true
   },
   {

@@ -1,0 +1,22 @@
+name: 错误报告
+description: 提交可复现的问题，请先删除个人数据和密钥。
+title: '[Bug] '
+body:
+  - type: input
+    id: version
+    attributes:
+      label: 程序版本与操作系统
+      placeholder: llm4orTT 0.1 / Windows 11 x64
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: 复现步骤、预期与实际表现
+      description: 模型问题请附服务商、模型 ID 和脱敏错误，切勿提供 API Key。
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: 脱敏日志或最小示例

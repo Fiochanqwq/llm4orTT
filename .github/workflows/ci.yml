@@ -1,37 +1,9 @@
 name: CI
-
-on:
-  push:
-  pull_request:
-  workflow_dispatch:
-
+on: [push, pull_request, workflow_dispatch]
 permissions:
   contents: read
-
-concurrency:
-  group: ci-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-
 jobs:
-  check:
-    runs-on: windows-latest
-    timeout-minutes: 15
-    env:
-      ELECTRON_SKIP_BINARY_DOWNLOAD: '1'
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '24'
-          cache: npm
-      - run: npm ci --no-audit --no-fund
-      - run: npm run test:ci
-      - run: npm run verify:evidence:published
-      - name: Measure evidence JavaScript coverage
-        run: npm run test:evidence:coverage
-      - run: npm run build
-
-  codespace:
+  inverse:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
@@ -45,28 +17,9 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.13'
-      - name: Prepare clean Linux environment
-        run: node scripts/setup-codespace.mjs
+      - run: npm ci --no-audit --no-fund
+      - run: npm run solver:prepare
+      - run: npm run build
       - run: npm run test:ci
-      - run: npm run verify:evidence:published
-      - name: Exercise real HiGHS solver
-        run: node --test test/solver.test.mjs test/evidence.test.mjs
-      - name: Reproduce and verify controlled evidence benchmark
-        run: npm run verify:evidence -- qa/evidence-ci
-      - name: Preserve reproducible evidence
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: evidence-verification-${{ github.sha }}
-          path: qa/evidence-ci
-          if-no-files-found: error
-      - name: Verify browser launcher and restart
-        env:
-          CODESPACES: 'true'
-          CODESPACE_NAME: ci-test
-          GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN: app.github.dev
-        run: |
-          npm run codespace > /tmp/llm4or-launch.txt
-          npm run codespace > /tmp/llm4or-reopen.txt
-          cmp /tmp/llm4or-launch.txt /tmp/llm4or-reopen.txt
-          curl --fail http://127.0.0.1:43127/api/health
+      - run: npm run test:inverse
+      - run: npm run test:research

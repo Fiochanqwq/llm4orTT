@@ -1,0 +1,28 @@
+离线复现说明
+
+已经安装的本项目：
+在项目根目录下运行 npm run experiment:replay。
+它只重算已有数据，不再调用大模型，不产生新的模型请求。
+最近一次复算的四方法汇总和全部配对差值完全一致，见 replay-verification.json。
+
+转交给其他研究者：
+1. 新建一个空工程目录，将 source-snapshot 中的文件按原目录结构放进去。
+2. 将本实验结果文件夹复制为该工程的 outputs/inverse/pilot-20261019-v3。
+3. 使用 Python 3.13.16；安装 pyomo==6.10.1、highspy==1.15.1。
+4. 依次运行：
+   python -X utf8 research/pilot.py run
+   python -X utf8 research/pilot.py feedback-evaluate
+   python -X utf8 research/report.py
+5. 可额外运行 python -X utf8 research/verify_oracles.py，独立核验300个前向模型和12个逆问题。
+   可运行 python -X utf8 test/research-pilot-test.py 检查噪声、评分、泄漏边界和可辨识性。
+
+原始模型回答已保存，所以离线复算不需要API密钥。
+重新采集大模型回答需要完整应用源码和自行配置的服务账户；不要用离线复算成绩冒称新的模型调用。
+temperature=0也不保证未来服务升级后给出逐字一致的答案，封存响应是本批比较的固定输入。
+
+oracle/private-bases.json 是评分用真值，包含模拟参数，不能放进学习器提示。
+public/guess-requests.json 是学习器输入；llm/raw 保存真实请求、响应和用量，不含密钥。
+manifest.json 用SHA256逐文件校验。文件名为“private”的数据也是本地生成的模拟数据，不是真人资料。
+
+完整方案中有设计依据、14篇用户参考文献及方法边界。
+NLP4LP正式模型尚未执行，原始题目文件需要数据源授权；不能用这批模拟数据代替正式基准。

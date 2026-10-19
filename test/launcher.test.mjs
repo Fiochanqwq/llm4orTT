@@ -8,7 +8,7 @@ import packageInfo from '../package.json' with { type: 'json' };
 import { ensureService } from '../server/launcher.mjs';
 
 for (const version of ['0.6.2', packageInfo.version]) test('existing local service version check: ' + version, async t => {
-  const server = http.createServer((req, res) => { res.setHeader('content-type', 'application/json'); res.end(JSON.stringify(req.url === '/api/state' ? { version: 1 } : { app: 'llm4orOvO', version })); });
+  const server = http.createServer((req, res) => { res.setHeader('content-type', 'application/json'); res.end(JSON.stringify(req.url === '/api/state' ? { version: 1 } : { app: 'llm4orTT', version })); });
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
   t.after(() => new Promise(resolve => server.close(resolve)));
   const directory = path.resolve('qa', 'launcher-' + crypto.randomUUID()); fs.mkdirSync(directory, { recursive: true });

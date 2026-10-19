@@ -2,6 +2,8 @@
 *.mjs text eol=lf
 *.py text eol=lf
 *.json text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
 /.github/workflows/ci.yml text eol=lf
 /.gitattributes text eol=lf
 # Published evidence is hashed byte-for-byte and must survive checkout unchanged.

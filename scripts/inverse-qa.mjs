@@ -1,0 +1,61 @@
+import { chromium, expect } from '@playwright/test';
+import fs from 'node:fs';
+import path from 'node:path';
+import { startServer } from '../server/http.mjs';
+
+const directory = path.resolve('qa', 'inverse-' + Date.now());
+fs.mkdirSync(directory, { recursive: true });
+const service = await startServer({ directory: path.join(directory, 'workspace'), staticDir: path.resolve('dist'), port: 0,
+  modelLister: async config => { if (config.id !== 'deepseek' || config.model !== 'deepseek-chat') throw Error('Model selection changed'); return { models: ['deepseek-chat', 'future/custom-snapshot'], source: 'api', verified: true }; },
+  secretVault: { protect: async v => Buffer.from(v).toString('base64'), unprotect: async v => Buffer.from(v, 'base64').toString() } });
+let browser;
+try {
+  browser = await chromium.launch({ executablePath: process.env.CHROME_PATH || 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: true });
+  const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
+  const errors = []; page.on('pageerror', e => errors.push(e.message));
+  await page.goto(service.origin + '/#token=' + service.token);
+  await expect(page).toHaveTitle('llm4orTT');
+  await expect(page.locator('.app-brand small')).toHaveText('v0.1');
+  await page.getByRole('tab', { name: '逆优化工作台' }).click();
+  await expect(page.getByRole('heading', { name: '从经验中，还原规则' })).toBeVisible();
+  await expect(page.getByLabel('运营日志 · 一行一条')).toContainText('夜班');
+  for (const name of ['实验工作台', '求解器']) await expect(page.getByRole('button', { name, exact: true })).toHaveCount(0);
+  await page.getByRole('button', { name: '设置', exact: true }).click();
+  await expect(page.getByRole('dialog', { name: '设置' })).toBeVisible();
+  await page.getByLabel('模型服务商').selectOption('deepseek');
+  await page.getByLabel('模型', { exact: true }).fill('deepseek-chat');
+  await page.getByLabel('API Key', { exact: true }).fill('qa-fake-key');
+  await page.getByRole('button', { name: '刷新可用模型' }).click();
+  await expect(page.getByRole('status')).toHaveText('已获取 2 个可用模型');
+  await expect(page.locator('#provider-models option[value="future/custom-snapshot"]')).toHaveCount(1);
+  await expect(page.getByLabel('模型', { exact: true })).toHaveValue('deepseek-chat');
+  await page.getByLabel('外观', { exact: true }).selectOption('graphite');
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'graphite');
+  await page.getByLabel('外观', { exact: true }).selectOption('light');
+  await page.getByRole('button', { name: '保存', exact: true }).click();
+  await expect(page.getByRole('status')).toHaveText('已保存');
+  await page.getByRole('button', { name: '关闭设置', exact: true }).click();
+  await page.screenshot({ path: path.join(directory, 'home.png'), fullPage: true });
+  await page.getByRole('button', { name: '运行三步重构' }).click();
+  await expect(page.getByRole('heading', { name: '恢复结果', exact: true })).toBeVisible({ timeout: 90000 });
+  await expect(page.getByText('逆问题已通过求解器最优性检查', { exact: false })).toBeVisible();
+  await expect(page.locator('.inverse-hypothesis')).toHaveCount(4);
+  await expect(page.locator('.inverse-hypothesis b').first()).toHaveText('夜班负担');
+  await expect(page.locator('.inverse-hypothesis p').first()).toContainText('老员工总说夜班太累');
+  await page.locator('.inverse-workspace').evaluate(element => { element.scrollTop = 0; });
+  await page.screenshot({ path: path.join(directory, 'result.png'), fullPage: true });
+  const download = page.waitForEvent('download');
+  await page.getByRole('button', { name: '导出证据' }).click();
+  await (await download).saveAs(path.join(directory, 'export.json'));
+  const exported = JSON.parse(fs.readFileSync(path.join(directory, 'export.json'), 'utf8'));
+  if (exported.status !== 'optimal' || !exported.trace.length || !exported.input) throw Error('Invalid evidence export');
+  await page.getByLabel('运营日志 · 一行一条').fill('修改后的运营备注');
+  await expect(page.getByText('输入已改变，以下是上一次运行结果。')).toBeVisible();
+  await page.reload();
+  await expect(page.getByLabel('运营日志 · 一行一条')).toHaveValue('修改后的运营备注');
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.screenshot({ path: path.join(directory, 'mobile.png'), fullPage: true });
+  const overflow = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
+  if (overflow || errors.length) throw Error(JSON.stringify({ overflow, errors }));
+  console.log(JSON.stringify({ status: 'passed', directory, checks: ['name and version', 'model discovery and old model selection', 'real inverse solve', 'evidence export', 'stale marker', 'draft persistence', 'mobile layout', 'no page errors'] }));
+} finally { await browser?.close(); await service.close(); }

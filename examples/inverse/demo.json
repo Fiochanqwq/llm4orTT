@@ -1,0 +1,1276 @@
+{
+  "schema": "contextual-inverse.v1",
+  "title": "从排班备注恢复隐性偏好",
+  "description": "六种可行排班方案中选一种。工资已知，夜班、交接、支援的隐性代价未知。",
+  "logs": [
+    "老员工总说夜班太累，排班时要算上这份负担。",
+    "临时换人总要重新交接，别只看工资。",
+    "跨区支援来回折腾，师傅一般会尽量避免。",
+    "有人说蓝色的排班表看着舒服，但这可能与实际安排无关。"
+  ],
+  "hypotheses": [
+    {
+      "id": "night",
+      "label": "夜班负担",
+      "source": "老员工总说夜班太累，排班时要算上这份负担。",
+      "lower": 0,
+      "upper": 10
+    },
+    {
+      "id": "handover",
+      "label": "交接损耗",
+      "source": "临时换人总要重新交接，别只看工资。",
+      "lower": 0,
+      "upper": 10
+    },
+    {
+      "id": "travel",
+      "label": "跨区支援",
+      "source": "跨区支援来回折腾，师傅一般会尽量避免。",
+      "lower": 0,
+      "upper": 10
+    },
+    {
+      "id": "color",
+      "label": "表格颜色偏好",
+      "source": "有人说蓝色的排班表看着舒服，但这可能与实际安排无关。",
+      "lower": 0,
+      "upper": 10
+    }
+  ],
+  "samples": [
+    {
+      "id": "context-0",
+      "model": {
+        "sense": "minimize",
+        "variables": [
+          {
+            "name": "plan_0",
+            "type": "binary",
+            "lower": 0,
+            "upper": 1
+          },
+          {
+            "name": "plan_1",
+            "type": "binary",
+            "lower": 0,
+            "upper": 1
+          },
+          {
+            "name": "plan_2",
+            "type": "binary",
+            "lower": 0,
+            "upper": 1
+          },
+          {
+            "name": "plan_3",
+            "type": "binary",
+            "lower": 0,
+            "upper": 1
+          },
+          {
+            "name": "plan_4",
+            "type": "binary",
+            "lower": 0,
+            "upper": 1
+          },
+          {
+            "name": "plan_5",
+            "type": "binary",
+            "lower": 0,
+            "upper": 1
+          }
+        ],
+        "objective": {
+          "plan_0": 17.3679,
+          "plan_1": 6.634,
+          "plan_2": 14.2577,
+          "plan_3": 13.2675,
+          "plan_4": 12.5821,
+          "plan_5": 3.7626
+        },
+        "constraints": [
+          {
+            "terms": {
+              "plan_0": 1,
+              "plan_1": 1,
+              "plan_2": 1,
+              "plan_3": 1,
+              "plan_4": 1,
+              "plan_5": 1
+            },
+            "sense": "=",
+            "rhs": 1
+          }
+        ]
+      },
+      "features": {
+        "night": {
+          "kind": "soft",
+          "terms": {
+            "plan_0": 0,
+            "plan_1": 1,
+            "plan_2": 3,
+            "plan_3": 3,
+            "plan_4": 2,
+            "plan_5": 4
+          },
+          "sense": "<=",
+          "rhs": 1
+        },
+        "handover": {
+          "kind": "linear",
+          "terms": {
+            "plan_0": 2,
+            "plan_1": 3,
+            "plan_2": 1,
+            "plan_3": 4,
+            "plan_4": 0,
+            "plan_5": 1
+          }
+        },
+        "travel": {
+          "kind": "linear",
+          "terms": {
+            "plan_0": 1,
+            "plan_1": 1,
+            "plan_2": 4,
+            "plan_3": 4,
+            "plan_4": 1,
+            "plan_5": 2
+          }
+        },
+        "color": {
+          "kind": "linear",
+          "terms": {
+            "plan_0": 4,
+            "plan_1": 0,
+            "plan_2": 0,
+            "plan_3": 2,
+            "plan_4": 3,
+            "plan_5": 0
+          }
+        }
+      },
+      "decision": {
+        "plan_0": -0.0,
+        "plan_1": -0.0,
+        "plan_2": -0.0,
+        "plan_3": -0.0,
+        "plan_4": 1.0,
+        "plan_5": -0.0
+      }
+    },
+    {
+      "id": "context-1",
+      "model": {
+        "sense": "minimize",
+        "variables": [
+          {
+            "name": "plan_0",
+            "type": "binary",
+            "lower": 0,
+            "upper": 1
+          },
+          {
+            "name": "plan_1",
+            "type": "binary",
+            "lower": 0,
+            "upper": 1
+          },
+          {
+            "name": "plan_2",
+            "type": "binary",
+            "lower": 0,
+            "upper": 1
+          },
+          {
+            "name": "plan_3",
+            "type": "binary",
+            "lower": 0,
+            "upper": 1
+          },
+          {
+            "name": "plan_4",
+            "type": "binary",
+            "lower": 0,
+            "upper": 1
+          },
+          {
+            "name": "plan_5",
+            "type": "binary",
+            "lower": 0,
+            "upper": 1
+          }
+        ],
+        "objective": {
+          "plan_0": 10.1166,
+          "plan_1": 15.7397,
+          "plan_2": 12.2428,
+          "plan_3": 11.5991,
+          "plan_4": 12.9218,
+          "plan_5": 8.5388
+        },
+        "constraints": [
+          {
+            "terms": {
+              "plan_0": 1,
+              "plan_1": 1,
+              "plan_2": 1,
+              "plan_3": 1,
+              "plan_4": 1,
+              "plan_5": 1
+            },
+            "sense": "=",
+            "rhs": 1
+          }
+        ]
+      },
+      "features": {
+        "night": {
+          "kind": "soft",
+          "terms": {
+            "plan_0": 4,
+            "plan_1": 2,
+            "plan_2": 0,
+            "plan_3": 3,
+            "plan_4": 2,
+            "plan_5": 4
+          },
+          "sense": "<=",
+          "rhs": 1
+        },
+        "handover": {
+          "kind": "linear",
+          "terms": {
+            "plan_0": 0,
+            "plan_1": 2,
+            "plan_2": 0,
+            "plan_3": 3,
+            "plan_4": 2,
+            "plan_5": 4
+          }
+        },
+        "travel": {
+          "kind": "linear",
+          "terms": {
+            "plan_0": 0,
+            "plan_1": 3,
+            "plan_2": 1,
+            "plan_3": 0,
+            "plan_4": 4,
+            "plan_5": 1
+          }
+        },
+        "color": {
+          "kind": "linear",
+          "terms": {
+            "plan_0": 1,
+            "plan_1": 4,
+            "plan_2": 2,
+            "plan_3": 0,
+            "plan_4": 2,
+            "plan_5": 0
+          }
+        }
+      },
+      "decision": {
+        "plan_0": -0.0,
+        "plan_1": -0.0,
+        "plan_2": 1.0,
+        "plan_3": -0.0,
+        "plan_4": -0.0,
+        "plan_5": -0.0
+      }
+    },
+    {
+      "id": "context-2",
+      "model": {
+        "sense": "minimize",
+        "variables": [
+          {
+            "name": "plan_0",
+            "type": "binary",
+            "lower": 0,
+            "upper": 1
+          },
+          {
+            "name": "plan_1",
+            "type": "binary",
+            "lower": 0,
+            "upper": 1
+          },
+          {
+            "name": "plan_2",
+            "type": "binary",
+            "lower": 0,
+            "upper": 1
+          },
+          {
+            "name": "plan_3",
+            "type": "binary",
+            "lower": 0,
+            "upper": 1
+          },
+          {
+            "name": "plan_4",
+            "type": "binary",
+            "lower": 0,
+            "upper": 1
+          },
+          {
+            "name": "plan_5",
+            "type": "binary",
+            "lower": 0,
+            "upper": 1
+          }
+        ],
+        "objective": {
+          "plan_0": 14.5835,
+          "plan_1": 5.084,
+          "plan_2": 11.6623,
+          "plan_3": 10.8887,
+          "plan_4": 10.8557,
+          "plan_5": 4.0718
+        },
+        "constraints": [
+          {
+            "terms": {
+              "plan_0": 1,
+              "plan_1": 1,
+              "plan_2": 1,
+              "plan_3": 1,
+              "plan_4": 1,
+              "plan_5": 1
+            },
+            "sense": "=",
+            "rhs": 1
+          }
+        ]
+      },
+      "features": {
+        "night": {
+          "kind": "soft",
+          "terms": {
+            "plan_0": 2,
+            "plan_1": 2,
+            "plan_2": 2,
+            "plan_3": 1,
+            "plan_4": 2,
+            "plan_5": 0
+          },
+          "sense": "<=",
+          "rhs": 1
+        },
+        "handover": {
+          "kind": "linear",
+          "terms": {
+            "plan_0": 4,
+            "plan_1": 4,
+            "plan_2": 2,
+            "plan_3": 2,
+            "plan_4": 0,
+            "plan_5": 0
+          }
+        },
+        "travel": {
+          "kind": "linear",
+          "terms": {
+            "plan_0": 2,
+            "plan_1": 0,
+            "plan_2": 3,
+            "plan_3": 2,
+            "plan_4": 3,
+            "plan_5": 0
+          }
+        },
+        "color": {
+          "kind": "linear",
+          "terms": {
+            "plan_0": 1,
+            "plan_1": 2,
+            "plan_2": 2,
+            "plan_3": 0,
+            "plan_4": 3,
+            "plan_5": 0
+          }
+        }
+      },
+      "decision": {
+        "plan_0": -0.0,
+        "plan_1": -0.0,
+        "plan_2": -0.0,
+        "plan_3": -0.0,
+        "plan_4": -0.0,
+        "plan_5": 1.0
+      }
+    },
+    {
+      "id": "context-3",
+      "model": {
+        "sense": "minimize",
+        "variables": [
+          {
+            "name": "plan_0",
+            "type": "binary",
+            "lower": 0,
+            "upper": 1
+          },
+          {
+            "name": "plan_1",
+            "type": "binary",
+            "lower": 0,
+            "upper": 1
+          },
+          {
+            "name": "plan_2",
+            "type": "binary",
+            "lower": 0,
+            "upper": 1
+          },
+          {
+            "name": "plan_3",
+            "type": "binary",
+            "lower": 0,
+            "upper": 1
+          },
+          {
+            "name": "plan_4",
+            "type": "binary",
+            "lower": 0,
+            "upper": 1
+          },
+          {
+            "name": "plan_5",
+            "type": "binary",
+            "lower": 0,
+            "upper": 1
+          }
+        ],
+        "objective": {
+          "plan_0": 11.9369,
+          "plan_1": 10.404,
+          "plan_2": 4.2143,
+          "plan_3": 9.7582,
+          "plan_4": 17.223,
+          "plan_5": 17.6573
+        },
+        "constraints": [
+          {
+            "terms": {
+              "plan_0": 1,
+              "plan_1": 1,
+              "plan_2": 1,
+              "plan_3": 1,
+              "plan_4": 1,
+              "plan_5": 1
+            },
+            "sense": "=",
+            "rhs": 1
+          }
+        ]
+      },
+      "features": {
+        "night": {
+          "kind": "soft",
+          "terms": {
+            "plan_0": 3,
+            "plan_1": 1,
+            "plan_2": 1,
+            "plan_3": 2,
+            "plan_4": 1,
+            "plan_5": 0
+          },
+          "sense": "<=",
+          "rhs": 1
+        },
+        "handover": {
+          "kind": "linear",
+          "terms": {
+            "plan_0": 1,
+            "plan_1": 0,
+            "plan_2": 4,
+            "plan_3": 2,
+            "plan_4": 2,
+            "plan_5": 2
+          }
+        },
+        "travel": {
+          "kind": "linear",
+          "terms": {
+            "plan_0": 0,
+            "plan_1": 1,
+            "plan_2": 3,
+            "plan_3": 0,
+            "plan_4": 2,
+            "plan_5": 2
+          }
+        },
+        "color": {
+          "kind": "linear",
+          "terms": {
+            "plan_0": 3,
+            "plan_1": 3,
+            "plan_2": 0,
+            "plan_3": 4,
+            "plan_4": 0,
+            "plan_5": 4
+          }
+        }
+      },
+      "decision": {
+        "plan_0": -0.0,
+        "plan_1": 1.0,
+        "plan_2": -0.0,
+        "plan_3": -0.0,
+        "plan_4": -0.0,
+        "plan_5": 0.0
+      }
+    },
+    {
+      "id": "context-4",
+      "model": {
+        "sense": "minimize",
+        "variables": [
+          {
+            "name": "plan_0",
+            "type": "binary",
+            "lower": 0,
+            "upper": 1
+          },
+          {
+            "name": "plan_1",
+            "type": "binary",
+            "lower": 0,
+            "upper": 1
+          },
+          {
+            "name": "plan_2",
+            "type": "binary",
+            "lower": 0,
+            "upper": 1
+          },
+          {
+            "name": "plan_3",
+            "type": "binary",
+            "lower": 0,
+            "upper": 1
+          },
+          {
+            "name": "plan_4",
+            "type": "binary",
+            "lower": 0,
+            "upper": 1
+          },
+          {
+            "name": "plan_5",
+            "type": "binary",
+            "lower": 0,
+            "upper": 1
+          }
+        ],
+        "objective": {
+          "plan_0": 12.184,
+          "plan_1": 5.8673,
+          "plan_2": 10.5165,
+          "plan_3": 6.2436,
+          "plan_4": 4.6145,
+          "plan_5": 6.7238
+        },
+        "constraints": [
+          {
+            "terms": {
+              "plan_0": 1,
+              "plan_1": 1,
+              "plan_2": 1,
+              "plan_3": 1,
+              "plan_4": 1,
+              "plan_5": 1
+            },
+            "sense": "=",
+            "rhs": 1
+          }
+        ]
+      },
+      "features": {
+        "night": {
+          "kind": "soft",
+          "terms": {
+            "plan_0": 3,
+            "plan_1": 4,
+            "plan_2": 3,
+            "plan_3": 3,
+            "plan_4": 1,
+            "plan_5": 4
+          },
+          "sense": "<=",
+          "rhs": 1
+        },
+        "handover": {
+          "kind": "linear",
+          "terms": {
+            "plan_0": 3,
+            "plan_1": 4,
+            "plan_2": 3,
+            "plan_3": 0,
+            "plan_4": 3,
+            "plan_5": 1
+          }
+        },
+        "travel": {
+          "kind": "linear",
+          "terms": {
+            "plan_0": 1,
+            "plan_1": 3,
+            "plan_2": 2,
+            "plan_3": 1,
+            "plan_4": 2,
+            "plan_5": 4
+          }
+        },
+        "color": {
+          "kind": "linear",
+          "terms": {
+            "plan_0": 0,
+            "plan_1": 4,
+            "plan_2": 4,
+            "plan_3": 4,
+            "plan_4": 3,
+            "plan_5": 0
+          }
+        }
+      },
+      "decision": {
+        "plan_0": -0.0,
+        "plan_1": -0.0,
+        "plan_2": -0.0,
+        "plan_3": 1.0,
+        "plan_4": -0.0,
+        "plan_5": -0.0
+      }
+    },
+    {
+      "id": "context-5",
+      "model": {
+        "sense": "minimize",
+        "variables": [
+          {
+            "name": "plan_0",
+            "type": "binary",
+            "lower": 0,
+            "upper": 1
+          },
+          {
+            "name": "plan_1",
+            "type": "binary",
+            "lower": 0,
+            "upper": 1
+          },
+          {
+            "name": "plan_2",
+            "type": "binary",
+            "lower": 0,
+            "upper": 1
+          },
+          {
+            "name": "plan_3",
+            "type": "binary",
+            "lower": 0,
+            "upper": 1
+          },
+          {
+            "name": "plan_4",
+            "type": "binary",
+            "lower": 0,
+            "upper": 1
+          },
+          {
+            "name": "plan_5",
+            "type": "binary",
+            "lower": 0,
+            "upper": 1
+          }
+        ],
+        "objective": {
+          "plan_0": 16.295,
+          "plan_1": 7.2599,
+          "plan_2": 11.2573,
+          "plan_3": 16.8761,
+          "plan_4": 10.8938,
+          "plan_5": 11.8076
+        },
+        "constraints": [
+          {
+            "terms": {
+              "plan_0": 1,
+              "plan_1": 1,
+              "plan_2": 1,
+              "plan_3": 1,
+              "plan_4": 1,
+              "plan_5": 1
+            },
+            "sense": "=",
+            "rhs": 1
+          }
+        ]
+      },
+      "features": {
+        "night": {
+          "kind": "soft",
+          "terms": {
+            "plan_0": 2,
+            "plan_1": 1,
+            "plan_2": 1,
+            "plan_3": 2,
+            "plan_4": 3,
+            "plan_5": 2
+          },
+          "sense": "<=",
+          "rhs": 1
+        },
+        "handover": {
+          "kind": "linear",
+          "terms": {
+            "plan_0": 3,
+            "plan_1": 4,
+            "plan_2": 0,
+            "plan_3": 4,
+            "plan_4": 0,
+            "plan_5": 4
+          }
+        },
+        "travel": {
+          "kind": "linear",
+          "terms": {
+            "plan_0": 0,
+            "plan_1": 1,
+            "plan_2": 4,
+            "plan_3": 4,
+            "plan_4": 1,
+            "plan_5": 3
+          }
+        },
+        "color": {
+          "kind": "linear",
+          "terms": {
+            "plan_0": 3,
+            "plan_1": 3,
+            "plan_2": 4,
+            "plan_3": 1,
+            "plan_4": 4,
+            "plan_5": 4
+          }
+        }
+      },
+      "decision": {
+        "plan_0": -0.0,
+        "plan_1": -0.0,
+        "plan_2": 1.0,
+        "plan_3": -0.0,
+        "plan_4": -0.0,
+        "plan_5": -0.0
+      }
+    },
+    {
+      "id": "context-6",
+      "model": {
+        "sense": "minimize",
+        "variables": [
+          {
+            "name": "plan_0",
+            "type": "binary",
+            "lower": 0,
+            "upper": 1
+          },
+          {
+            "name": "plan_1",
+            "type": "binary",
+            "lower": 0,
+            "upper": 1
+          },
+          {
+            "name": "plan_2",
+            "type": "binary",
+            "lower": 0,
+            "upper": 1
+          },
+          {
+            "name": "plan_3",
+            "type": "binary",
+            "lower": 0,
+            "upper": 1
+          },
+          {
+            "name": "plan_4",
+            "type": "binary",
+            "lower": 0,
+            "upper": 1
+          },
+          {
+            "name": "plan_5",
+            "type": "binary",
+            "lower": 0,
+            "upper": 1
+          }
+        ],
+        "objective": {
+          "plan_0": 9.5988,
+          "plan_1": 2.1936,
+          "plan_2": 6.2148,
+          "plan_3": 17.8049,
+          "plan_4": 15.2211,
+          "plan_5": 9.478
+        },
+        "constraints": [
+          {
+            "terms": {
+              "plan_0": 1,
+              "plan_1": 1,
+              "plan_2": 1,
+              "plan_3": 1,
+              "plan_4": 1,
+              "plan_5": 1
+            },
+            "sense": "=",
+            "rhs": 1
+          }
+        ]
+      },
+      "features": {
+        "night": {
+          "kind": "soft",
+          "terms": {
+            "plan_0": 2,
+            "plan_1": 1,
+            "plan_2": 0,
+            "plan_3": 2,
+            "plan_4": 0,
+            "plan_5": 4
+          },
+          "sense": "<=",
+          "rhs": 1
+        },
+        "handover": {
+          "kind": "linear",
+          "terms": {
+            "plan_0": 0,
+            "plan_1": 0,
+            "plan_2": 0,
+            "plan_3": 3,
+            "plan_4": 2,
+            "plan_5": 4
+          }
+        },
+        "travel": {
+          "kind": "linear",
+          "terms": {
+            "plan_0": 1,
+            "plan_1": 0,
+            "plan_2": 0,
+            "plan_3": 3,
+            "plan_4": 4,
+            "plan_5": 1
+          }
+        },
+        "color": {
+          "kind": "linear",
+          "terms": {
+            "plan_0": 0,
+            "plan_1": 3,
+            "plan_2": 0,
+            "plan_3": 3,
+            "plan_4": 0,
+            "plan_5": 4
+          }
+        }
+      },
+      "decision": {
+        "plan_0": -0.0,
+        "plan_1": 1.0,
+        "plan_2": 0.0,
+        "plan_3": -0.0,
+        "plan_4": -0.0,
+        "plan_5": -0.0
+      }
+    },
+    {
+      "id": "context-7",
+      "model": {
+        "sense": "minimize",
+        "variables": [
+          {
+            "name": "plan_0",
+            "type": "binary",
+            "lower": 0,
+            "upper": 1
+          },
+          {
+            "name": "plan_1",
+            "type": "binary",
+            "lower": 0,
+            "upper": 1
+          },
+          {
+            "name": "plan_2",
+            "type": "binary",
+            "lower": 0,
+            "upper": 1
+          },
+          {
+            "name": "plan_3",
+            "type": "binary",
+            "lower": 0,
+            "upper": 1
+          },
+          {
+            "name": "plan_4",
+            "type": "binary",
+            "lower": 0,
+            "upper": 1
+          },
+          {
+            "name": "plan_5",
+            "type": "binary",
+            "lower": 0,
+            "upper": 1
+          }
+        ],
+        "objective": {
+          "plan_0": 2.9571,
+          "plan_1": 17.5903,
+          "plan_2": 6.1974,
+          "plan_3": 7.7104,
+          "plan_4": 17.0416,
+          "plan_5": 11.3004
+        },
+        "constraints": [
+          {
+            "terms": {
+              "plan_0": 1,
+              "plan_1": 1,
+              "plan_2": 1,
+              "plan_3": 1,
+              "plan_4": 1,
+              "plan_5": 1
+            },
+            "sense": "=",
+            "rhs": 1
+          }
+        ]
+      },
+      "features": {
+        "night": {
+          "kind": "soft",
+          "terms": {
+            "plan_0": 3,
+            "plan_1": 3,
+            "plan_2": 0,
+            "plan_3": 4,
+            "plan_4": 2,
+            "plan_5": 0
+          },
+          "sense": "<=",
+          "rhs": 1
+        },
+        "handover": {
+          "kind": "linear",
+          "terms": {
+            "plan_0": 0,
+            "plan_1": 2,
+            "plan_2": 2,
+            "plan_3": 2,
+            "plan_4": 0,
+            "plan_5": 2
+          }
+        },
+        "travel": {
+          "kind": "linear",
+          "terms": {
+            "plan_0": 1,
+            "plan_1": 4,
+            "plan_2": 1,
+            "plan_3": 3,
+            "plan_4": 2,
+            "plan_5": 3
+          }
+        },
+        "color": {
+          "kind": "linear",
+          "terms": {
+            "plan_0": 0,
+            "plan_1": 2,
+            "plan_2": 1,
+            "plan_3": 0,
+            "plan_4": 3,
+            "plan_5": 2
+          }
+        }
+      },
+      "decision": {
+        "plan_0": 1.0,
+        "plan_1": -0.0,
+        "plan_2": 0.0,
+        "plan_3": -0.0,
+        "plan_4": -0.0,
+        "plan_5": -0.0
+      }
+    },
+    {
+      "id": "context-8",
+      "model": {
+        "sense": "minimize",
+        "variables": [
+          {
+            "name": "plan_0",
+            "type": "binary",
+            "lower": 0,
+            "upper": 1
+          },
+          {
+            "name": "plan_1",
+            "type": "binary",
+            "lower": 0,
+            "upper": 1
+          },
+          {
+            "name": "plan_2",
+            "type": "binary",
+            "lower": 0,
+            "upper": 1
+          },
+          {
+            "name": "plan_3",
+            "type": "binary",
+            "lower": 0,
+            "upper": 1
+          },
+          {
+            "name": "plan_4",
+            "type": "binary",
+            "lower": 0,
+            "upper": 1
+          },
+          {
+            "name": "plan_5",
+            "type": "binary",
+            "lower": 0,
+            "upper": 1
+          }
+        ],
+        "objective": {
+          "plan_0": 12.958,
+          "plan_1": 9.7251,
+          "plan_2": 4.0512,
+          "plan_3": 10.0776,
+          "plan_4": 17.5991,
+          "plan_5": 11.1525
+        },
+        "constraints": [
+          {
+            "terms": {
+              "plan_0": 1,
+              "plan_1": 1,
+              "plan_2": 1,
+              "plan_3": 1,
+              "plan_4": 1,
+              "plan_5": 1
+            },
+            "sense": "=",
+            "rhs": 1
+          }
+        ]
+      },
+      "features": {
+        "night": {
+          "kind": "soft",
+          "terms": {
+            "plan_0": 2,
+            "plan_1": 0,
+            "plan_2": 3,
+            "plan_3": 3,
+            "plan_4": 4,
+            "plan_5": 3
+          },
+          "sense": "<=",
+          "rhs": 1
+        },
+        "handover": {
+          "kind": "linear",
+          "terms": {
+            "plan_0": 4,
+            "plan_1": 4,
+            "plan_2": 1,
+            "plan_3": 4,
+            "plan_4": 1,
+            "plan_5": 1
+          }
+        },
+        "travel": {
+          "kind": "linear",
+          "terms": {
+            "plan_0": 4,
+            "plan_1": 4,
+            "plan_2": 2,
+            "plan_3": 3,
+            "plan_4": 2,
+            "plan_5": 3
+          }
+        },
+        "color": {
+          "kind": "linear",
+          "terms": {
+            "plan_0": 0,
+            "plan_1": 4,
+            "plan_2": 1,
+            "plan_3": 1,
+            "plan_4": 1,
+            "plan_5": 1
+          }
+        }
+      },
+      "decision": {
+        "plan_0": -0.0,
+        "plan_1": 0.0,
+        "plan_2": 1.0,
+        "plan_3": -0.0,
+        "plan_4": -0.0,
+        "plan_5": -0.0
+      }
+    },
+    {
+      "id": "context-9",
+      "model": {
+        "sense": "minimize",
+        "variables": [
+          {
+            "name": "plan_0",
+            "type": "binary",
+            "lower": 0,
+            "upper": 1
+          },
+          {
+            "name": "plan_1",
+            "type": "binary",
+            "lower": 0,
+            "upper": 1
+          },
+          {
+            "name": "plan_2",
+            "type": "binary",
+            "lower": 0,
+            "upper": 1
+          },
+          {
+            "name": "plan_3",
+            "type": "binary",
+            "lower": 0,
+            "upper": 1
+          },
+          {
+            "name": "plan_4",
+            "type": "binary",
+            "lower": 0,
+            "upper": 1
+          },
+          {
+            "name": "plan_5",
+            "type": "binary",
+            "lower": 0,
+            "upper": 1
+          }
+        ],
+        "objective": {
+          "plan_0": 8.8323,
+          "plan_1": 7.1471,
+          "plan_2": 14.1291,
+          "plan_3": 14.0056,
+          "plan_4": 14.7889,
+          "plan_5": 6.6188
+        },
+        "constraints": [
+          {
+            "terms": {
+              "plan_0": 1,
+              "plan_1": 1,
+              "plan_2": 1,
+              "plan_3": 1,
+              "plan_4": 1,
+              "plan_5": 1
+            },
+            "sense": "=",
+            "rhs": 1
+          }
+        ]
+      },
+      "features": {
+        "night": {
+          "kind": "soft",
+          "terms": {
+            "plan_0": 1,
+            "plan_1": 3,
+            "plan_2": 2,
+            "plan_3": 4,
+            "plan_4": 1,
+            "plan_5": 2
+          },
+          "sense": "<=",
+          "rhs": 1
+        },
+        "handover": {
+          "kind": "linear",
+          "terms": {
+            "plan_0": 0,
+            "plan_1": 0,
+            "plan_2": 2,
+            "plan_3": 3,
+            "plan_4": 0,
+            "plan_5": 3
+          }
+        },
+        "travel": {
+          "kind": "linear",
+          "terms": {
+            "plan_0": 0,
+            "plan_1": 4,
+            "plan_2": 3,
+            "plan_3": 1,
+            "plan_4": 1,
+            "plan_5": 0
+          }
+        },
+        "color": {
+          "kind": "linear",
+          "terms": {
+            "plan_0": 2,
+            "plan_1": 0,
+            "plan_2": 2,
+            "plan_3": 2,
+            "plan_4": 3,
+            "plan_5": 2
+          }
+        }
+      },
+      "decision": {
+        "plan_0": 1.0,
+        "plan_1": -0.0,
+        "plan_2": -0.0,
+        "plan_3": -0.0,
+        "plan_4": -0.0,
+        "plan_5": -0.0
+      }
+    }
+  ],
+  "lambda": 0.01,
+  "pruneThreshold": 0.001,
+  "anomalyThreshold": 0.1,
+  "maxIterations": 60,
+  "provenance": {
+    "dataset": "synthetic-scheduling-v1",
+    "seed": 17,
+    "K": 10,
+    "noiseBudget": 0,
+    "masked": 2,
+    "logGenerator": "deterministic-template",
+    "history": "solver-generated; not actual human decisions"
+  }
+}

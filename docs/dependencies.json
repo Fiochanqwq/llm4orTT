@@ -386,22 +386,6 @@
     ]
   },
   {
-    "name": "@resvg/resvg-js",
-    "version": "2.6.2",
-    "license": "MPL-2.0",
-    "development": true,
-    "noticeFiles": [
-      "LICENSE"
-    ]
-  },
-  {
-    "name": "@resvg/resvg-js-win32-x64-msvc",
-    "version": "2.6.2",
-    "license": "MPL-2.0",
-    "development": true,
-    "noticeFiles": []
-  },
-  {
     "name": "@rolldown/binding-win32-x64-msvc",
     "version": "1.2.13",
     "license": "MIT",
@@ -1984,15 +1968,6 @@
     ]
   },
   {
-    "name": "highlight.js",
-    "version": "11.11.2",
-    "license": "BSD-3-Clause",
-    "development": false,
-    "noticeFiles": [
-      "LICENSE"
-    ]
-  },
-  {
     "name": "hosted-git-info",
     "version": "4.1.0",
     "license": "ISC",
@@ -2340,15 +2315,6 @@
     "version": "2.0.0",
     "license": "MIT",
     "development": true,
-    "noticeFiles": [
-      "license"
-    ]
-  },
-  {
-    "name": "lowlight",
-    "version": "3.3.0",
-    "license": "MIT",
-    "development": false,
     "noticeFiles": [
       "license"
     ]
@@ -3393,15 +3359,6 @@
     "development": true,
     "noticeFiles": [
       "LICENSE"
-    ]
-  },
-  {
-    "name": "rehype-highlight",
-    "version": "7.0.2",
-    "license": "MIT",
-    "development": false,
-    "noticeFiles": [
-      "license"
     ]
   },
   {

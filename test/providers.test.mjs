@@ -1,19 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import http from 'node:http';
-import {compactResearchTool,compactReviewTool} from '../shared/compact-protocol.mjs';
-const { generate, planOptimization, readableError } = await import(process.env.FYPPPPP_TEST_BUNDLE === '1' ? '../build/stage/server/providers.mjs' : '../server/providers.mjs');
+const { generate, readableError, listModels } = await import(process.env.FYPPPPP_TEST_BUNDLE === '1' ? '../build/stage/server/providers.mjs' : '../server/providers.mjs');
 function sse(events) { return new Response(events.map(e => (e.type ? 'event: ' + e.type + '\n' : '') + 'data: ' + (typeof e === 'string' ? e : JSON.stringify(e)) + '\n\n').join(''), { headers: { 'content-type': 'text/event-stream' } }); }
 const base = { apiKey: 'qa-fake-key', baseURL: 'https://test.invalid', model: 'qa-model', maxTokens: 1024 };
-test('compact object envelopes preserve non-strict provider schema and object responses',async()=>{
-  for(const tool of [compactResearchTool,compactReviewTool]){
-    let payload;const args=tool===compactReviewTool?{review_json:{status:'uncertain'}}:{contract_json:{requirements:[]}};
-    const result=await planOptimization({...base,id:'openai',tool},[{role:'user',content:'offline schema check'}],new AbortController().signal,{fetch:async(_url,options)=>{
-      payload=JSON.parse(options.body);return new Response(JSON.stringify({id:'offline',status:'completed',output:[{type:'function_call',call_id:'offline',name:tool.name,arguments:JSON.stringify(args)}],usage:{input_tokens:1,output_tokens:1}}),{headers:{'content-type':'application/json'}});
-    }});
-    assert.equal(payload.tools[0].strict,false);assert.deepEqual(JSON.parse(result.calls[0].arguments),args);
-  }
-});
 const messages = [{ role: 'user', content: 'test' }];
 for (const id of ['openai', 'anthropic', 'glm', 'deepseek', 'qwen']) test(id + ': official SDK serializes request and application consumes stream', async () => {
   let request;
@@ -41,60 +31,82 @@ test('Gemini official SDK uses generateContentStream and preserves text/usage', 
 test('errors redact provider internals and map common failures', () => {
   for (const status of [400, 401, 403, 404, 429, 500]) { const value = readableError({ status, message: 'secret sk-example' }); assert.ok(!value.includes('sk-example')); assert.notEqual(value, '连接失败，请检查网络、接口地址与模型配置'); }
 });
-
-const args = { action: 'clarify', model_json: '', message: 'What is the capacity?' };
-for (const id of ['openai', 'anthropic', 'glm', 'deepseek', 'qwen']) test(id + ': official SDK tool request preserves arguments/usage, without exposing reasoning', async () => {
-  let payload;
-  const fetch = async (_url, options) => {
-    payload = JSON.parse(options.body);
-    if (!['openai', 'anthropic'].includes(id)) return sse([
-      { id: 'qa-response', choices: [{ delta: { reasoning_content: 'private reasoning', tool_calls: [{ index: 0, id: 'qa-call', type: 'function', function: { name: 'submit_optimization', arguments: JSON.stringify(args).slice(0, 15) } }] } }] },
-      { choices: [{ delta: { tool_calls: [{ index: 0, function: { arguments: JSON.stringify(args).slice(15) } }] }, finish_reason: 'tool_calls' }], usage: { prompt_tokens: 2, completion_tokens: 3 } }, '[DONE]'
-    ]);
-    const response = id === 'openai' ? { id: 'qa-response', status: 'completed', output: [{ type: 'function_call', call_id: 'qa-call', name: 'submit_optimization', arguments: JSON.stringify(args) }], usage: { input_tokens: 2, output_tokens: 3 } }
-      : id === 'anthropic' ? { id: 'qa-response', stop_reason: 'tool_use', content: [{ type: 'thinking', thinking: 'private reasoning' }, { type: 'tool_use', id: 'qa-call', name: 'submit_optimization', input: args }], usage: { input_tokens: 2, output_tokens: 3 } }
-      : { id: 'qa-response', choices: [{ finish_reason: 'tool_calls', message: { role: 'assistant', content: '', reasoning_content: 'private reasoning', tool_calls: [{ id: 'qa-call', type: 'function', function: { name: 'submit_optimization', arguments: JSON.stringify(args) } }] } }], usage: { prompt_tokens: 2, completion_tokens: 3 } };
-    return new Response(JSON.stringify(response), { headers: { 'content-type': 'application/json' } });
-  };
-  const result = await planOptimization({ ...base, id }, messages, new AbortController().signal, { fetch });
-  assert.equal(result.calls.length, 1); assert.equal(result.calls[0].name, 'submit_optimization');
-  assert.deepEqual(typeof result.calls[0].arguments === 'string' ? JSON.parse(result.calls[0].arguments) : result.calls[0].arguments, args);
-  assert.deepEqual(result.usage, { input: 2, output: 3 }); assert.equal(result.truncated, false); assert.ok(!JSON.stringify(result).includes('private reasoning'));
-  assert.equal(payload.tools.length, 1); assert.equal(!!payload.stream, !['openai', 'anthropic'].includes(id));
-  if (id === 'openai') { assert.equal(payload.tool_choice.name, 'submit_optimization'); assert.equal(payload.tools[0].strict, true); }
-  if (id === 'anthropic') assert.equal(payload.tool_choice.disable_parallel_tool_use, true);
+test('ordinary chat uses general conversation instructions through the SDK', async () => {
+  let instructions;
+  const fetch = async (_url, options) => { instructions = JSON.parse(options.body).instructions; return sse([{ type: 'response.output_text.delta', delta: '你好' }, { type: 'response.completed', response: {} }]); };
+  for await (const _chunk of generate({ ...base, id: 'openai', purpose: 'chat' }, messages, new AbortController().signal, { fetch })) { /* Consume the official SDK stream. */ }
+  assert.match(instructions, /通用对话助手/); assert.ok(!instructions.includes('你是上下文逆优化的结构假设生成器'));
 });
 
-test('Gemini official SDK serializes mandatory function declaration and parses its call', async t => {
-  let payload;
-  const server = http.createServer(async (req, res) => {
-    let body = ''; for await (const chunk of req) body += chunk; payload = JSON.parse(body);
-    res.writeHead(200, { 'content-type': 'application/json' }); res.end(JSON.stringify({ candidates: [{ finishReason: 'STOP', content: { role: 'model', parts: [{ thought: true, text: 'private reasoning' }, { functionCall: { name: 'submit_optimization', args } }] } }], usageMetadata: { promptTokenCount: 2, candidatesTokenCount: 3 } }));
+const historicalModels = ['deepseek-chat', 'deepseek-coder', 'deepseek-reasoner',
+  'deepseek-ai/DeepSeek-V2-Chat', 'deepseek-ai/DeepSeek-Coder-V2-Instruct', 'deepseek-ai/DeepSeek-V2.5-1210',
+  'deepseek-ai/DeepSeek-V3', 'deepseek-ai/DeepSeek-V3-0324', 'deepseek-ai/DeepSeek-R1',
+  'deepseek-ai/DeepSeek-R1-0528', 'deepseek-ai/DeepSeek-R1-Distill-Qwen-32B',
+  'deepseek-ai/DeepSeek-V3.1-Terminus', 'deepseek-ai/DeepSeek-V3.2-Exp', 'deepseek-ai/DeepSeek-V3.2-Speciale'];
+const modernModels = ['deepseek-flash', 'deepseek-v4-pro', 'deepseek-v4-flash',
+  'deepseek-v4-flash-vision-exp', 'DeepSeek-V4.1-Flash-1017'];
+const unknownModels = ['vendor/future-snapshot-unknown', 'vendor/DeepSeek-V5-Pro'];
+for (const model of [...historicalModels, ...modernModels, ...unknownModels]) {
+  test('DeepSeek preserves ID and uses compatible request fields: ' + model, async () => {
+    let request;
+    const fetch = async (url, options) => {
+      request = { url: String(url), ...JSON.parse(options.body) };
+      return sse([
+        { id: 'response-fixture', model: 'actual-backend', choices: [{ delta: { reasoning_content: 'private reasoning' } }] },
+        { choices: [{ delta: { content: 'final answer' } }] },
+        { choices: [{ delta: {}, finish_reason: 'stop' }] },
+        { choices: [], usage: { prompt_tokens: 13, completion_tokens: 17 } }, '[DONE]'
+      ]);
+    };
+    const chunks = [];
+    const history = [{ role: 'user', content: 'first' }, { role: 'assistant', content: 'previous' }, { role: 'user', content: 'next' }];
+    for await (const chunk of generate({ ...base, id: 'deepseek', model, maxTokens: 100000 }, history, new AbortController().signal, { fetch })) chunks.push(chunk);
+    assert.equal(request.model, model);
+    assert.deepEqual(request.messages.slice(1), history);
+    assert.equal(chunks.map(c => c.text || '').join(''), 'final answer');
+    assert.deepEqual(chunks.find(c => c.usage).usage, { input: 13, output: 17 });
+    const metadata = chunks.find(c => c.requestMetadata).requestMetadata;
+    assert.equal(metadata.requestedModel, model); assert.equal(metadata.returnedModel, 'actual-backend');
+    assert.equal(metadata.responseId, 'response-fixture'); assert.equal(metadata.maxOutputTokens, request.max_tokens);
+    assert.equal(metadata.requestedMaxOutputTokens, 100000);
+    if (modernModels.includes(model)) {
+      assert.deepEqual(request.thinking, { type: 'enabled' }); assert.equal(request.reasoning_effort, 'high');
+      assert.equal(request.stream_options.include_usage, true); assert.equal(request.max_tokens, 100000);
+    } else {
+      for (const field of ['thinking', 'reasoning_effort', 'stream_options', 'temperature']) assert.ok(!(field in request));
+      const expected = /reasoner|r1/i.test(model) ? 65536 : unknownModels.includes(model) ? 100000 : 4096;
+      assert.equal(request.max_tokens, expected);
+    }
   });
-  await new Promise(r => server.listen(0, '127.0.0.1', r)); t.after(() => new Promise(r => server.close(r)));
-  const result = await planOptimization({ ...base, id: 'gemini', baseURL: 'http://127.0.0.1:' + server.address().port }, messages, new AbortController().signal);
-  assert.equal(payload.toolConfig.functionCallingConfig.mode, 'ANY'); assert.equal(payload.tools[0].functionDeclarations[0].name, 'submit_optimization');
-  assert.deepEqual(payload.tools[0].functionDeclarations[0].parametersJsonSchema.required, ['action', 'model_json', 'message', 'questions']);
-  assert.deepEqual(result.calls[0].arguments, args); assert.deepEqual(result.usage, { input: 2, output: 3 }); assert.equal(result.text, '');
+}
+
+test('DeepSeek length finish warns; missing or abnormal finish fails', async () => {
+  for (const reason of ['length', null, 'content_filter', 'tool_calls']) {
+    const chunks = [];
+    const fetch = async () => sse([{ choices: [{ delta: { content: 'partial' }, finish_reason: reason }] }, '[DONE]']);
+    const consume = async () => { for await (const c of generate({ ...base, id: 'deepseek', model: 'deepseek-chat' }, messages, new AbortController().signal, { fetch })) chunks.push(c); };
+    if (reason === 'length') { await consume(); assert.ok(chunks.some(c => c.warning)); }
+    else { await assert.rejects(consume(), /DeepSeek/); assert.ok(!chunks.some(c => c.requestMetadata)); }
+  }
 });
 
-test('DeepSeek planner uses a fresh input transcript, without synthetic assistant reasoning', async () => {
-  let payload;
-  const result = await planOptimization({ ...base, id: 'deepseek' }, [{ role: 'user', content: 'budget unknown' }, { role: 'assistant', content: 'What is the budget?' }, { role: 'user', content: '320 fixed' }], new AbortController().signal, { fetch: async (_url, options) => {
-    payload = JSON.parse(options.body);
-    return sse([{ choices: [{ delta: { content: '{}' }, finish_reason: 'stop' }] }, '[DONE]']);
+test('DeepSeek cancellation and rejected credentials do not retry or switch models', async () => {
+  let attempts = 0;
+  const fetch = async () => { attempts++; return new Response(JSON.stringify({ error: { message: 'invalid key' } }), { status: 401, headers: { 'content-type': 'application/json' } }); };
+  await assert.rejects(async () => { for await (const _ of generate({ ...base, id: 'deepseek' }, messages, new AbortController().signal, { fetch })) {} }, e => e.status === 401);
+  assert.equal(attempts, 1);
+  const controller = new AbortController(); controller.abort();
+  await assert.rejects(async () => { for await (const _ of generate({ ...base, id: 'deepseek' }, messages, controller.signal, { fetch })) {} }, /abort/i);
+  assert.equal(attempts, 1);
+});
+
+test('DeepSeek discovers historical and future models from the configured endpoint', async () => {
+  let url;
+  const config = { ...base, id: 'deepseek', baseURL: 'https://gateway.invalid/v1' };
+  const result = await listModels(config, new AbortController().signal, { fetch: async value => {
+    url = String(value);
+    return new Response(JSON.stringify({ object: 'list', data: ['custom/future-9', 'deepseek-chat', 'deepseek-chat', 'deepseek-flash'].map(id => ({ id, object: 'model', owned_by: 'fixture' })) }), { headers: { 'content-type': 'application/json' } });
   } });
-  assert.deepEqual(payload.messages.map(m => m.role), ['system', 'user']);
-  assert.ok(payload.messages[1].content.includes('What is the budget?')); assert.ok(payload.messages[1].content.includes('320 fixed'));
-  assert.equal(payload.tool_choice, 'auto'); assert.deepEqual(payload.thinking, {type:'enabled'}); assert.equal(payload.reasoning_effort, 'high');
-  assert.equal(result.truncated, false);
-});
-
-test('compatible planning stream without a finish reason cannot be solved', async () => {
-  const result = await planOptimization({ ...base, id: 'deepseek' }, messages, new AbortController().signal, { fetch: async () => sse([{ choices: [{ delta: { content: JSON.stringify(args) } }] }, '[DONE]']) });
-  assert.equal(result.truncated, true);
-});
-
-test('compatible planning stream bounds untrusted tool indices', async () => {
-  await assert.rejects(() => planOptimization({ ...base, id: 'deepseek' }, messages, new AbortController().signal, { fetch: async () => sse([{ choices: [{ delta: { tool_calls: [{ index: 999999, function: { name: 'bad', arguments: '{}' } }] } }] }, '[DONE]']) }), /Invalid tool index/);
+  assert.equal(url, 'https://gateway.invalid/v1/models');
+  assert.deepEqual(result, { models: ['custom/future-9', 'deepseek-chat', 'deepseek-flash'], source: 'api', verified: true });
 });

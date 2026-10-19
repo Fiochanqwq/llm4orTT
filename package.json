@@ -1,47 +1,46 @@
 {
-  "name": "llm4orovo",
-  "version": "0.7.8",
+  "name": "llm4ortt",
+  "version": "0.1.0",
   "private": true,
   "type": "module",
   "main": "electron/main.cjs",
-  "description": "A local optimization conversation workspace",
+  "description": "Contextual inverse optimization from operational logs and historical decisions",
   "author": "FYPPPPP",
   "license": "UNLICENSED",
   "scripts": {
     "dev": "node scripts/dev.mjs",
-    "build": "tsc --noEmit && vite build",
+    "build": "node scripts/clean-dist.mjs && tsc --noEmit && vite build",
     "start": "node server/launcher.mjs --browser",
-    "codespace": "node scripts/codespace.mjs",
     "desktop": "electron .",
-    "test": "node --test test/*.test.mjs",
-    "test:ci": "node --test --test-timeout=60000 test/math.test.mjs test/model-export.test.mjs test/preflight.test.mjs test/providers.test.mjs test/launcher.test.mjs test/loopback.test.mjs test/codespace.test.mjs test/evidence-routing.test.mjs test/evidence-metrics.test.mjs test/evidence-fallback.test.mjs test/evidence-statistics.test.mjs",
-    "test:evidence:coverage": "node --test --test-timeout=60000 --experimental-test-coverage --test-coverage-include=server/decision-metrics.mjs --test-coverage-include=server/evidence-routing.mjs --test-coverage-include=server/optimization-v07.mjs --test-coverage-include=scripts/lib/evidence-statistics.mjs test/evidence-routing.test.mjs test/evidence-metrics.test.mjs test/evidence-fallback.test.mjs test/evidence-statistics.test.mjs",
+    "test": "node --test --test-timeout=60000 test/inverse.test.mjs test/workspace.test.mjs test/providers.test.mjs test/launcher.test.mjs test/loopback.test.mjs test/chat.test.mjs",
+    "test:ci": "npm test",
+    "test:inverse": "node scripts/inverse.mjs test && node --test test/inverse.test.mjs",
+    "benchmark:inverse": "node scripts/inverse.mjs --out outputs/inverse/synthetic-benchmark.json --seeds 17",
+    "qa:browser": "node scripts/inverse-qa.mjs",
+    "qa:desktop": "node scripts/inverse-desktop-qa.mjs",
     "licenses": "node scripts/licenses.mjs",
-    "package": "npm run build && npm run licenses && npm run stage && electron-builder --win dir",
-    "package:installer": "npm run build && npm run licenses && npm run stage && electron-builder --win nsis",
-    "solver:prepare": "node scripts/prepare-solver.mjs",
     "stage": "node scripts/stage-app.mjs",
-    "verify:evidence": "node scripts/verify-evidence.mjs",
-    "analyze:evidence": "node scripts/analyze-controlled-evidence.mjs",
-    "verify:evidence:published": "node scripts/check-published-evidence.mjs docs/evidence/controlled"
+    "package": "npm run build && npm run licenses && npm run stage && electron-builder --win dir",
+    "solver:prepare": "node scripts/setup-solver.mjs",
+    "qa:chat": "node scripts/chat-qa.mjs",
+    "experiment:replay": "node scripts/research-local.mjs",
+    "test:research": "node scripts/research-local.mjs --test"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "0.132.1",
     "@google/genai": "2.28.0",
-    "katex": "0.16.47",
     "lucide-react": "1.54.0",
     "openai": "7.31.0",
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "react-markdown": "10.1.0",
-    "rehype-highlight": "7.0.2",
-    "rehype-katex": "7.0.1",
     "remark-gfm": "4.0.1",
-    "remark-math": "6.0.0"
+    "remark-math": "6.0.0",
+    "rehype-katex": "7.0.1",
+    "katex": "0.16.47"
   },
   "devDependencies": {
     "@playwright/test": "1.64.0",
-    "@resvg/resvg-js": "2.6.2",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
     "@vitejs/plugin-react": "6.1.2",
@@ -55,11 +54,11 @@
     "@malept/flatpak-bundler": "0.4.0"
   },
   "build": {
-    "appId": "org.fyppppp.slime",
-    "productName": "llm4orOvO",
+    "appId": "org.fyppppp.llm4ortt",
+    "productName": "llm4orTT",
     "electronDist": "node_modules/electron/dist",
     "directories": {
-      "output": "release/0.7.8",
+      "output": "release/0.1.0",
       "app": "build/stage"
     },
     "files": [
@@ -68,14 +67,9 @@
       "!docs{,/**/*}"
     ],
     "win": {
-      "target": "nsis",
+      "target": "dir",
       "icon": "assets/saturn.ico",
       "signAndEditExecutable": true
-    },
-    "nsis": {
-      "oneClick": false,
-      "allowToChangeInstallationDirectory": true,
-      "createDesktopShortcut": true
     },
     "extraFiles": [
       {
@@ -89,6 +83,10 @@
       {
         "from": "THIRD_PARTY_NOTICES.txt",
         "to": "THIRD_PARTY_NOTICES.txt"
+      },
+      {
+        "from": "LICENSE",
+        "to": "LICENSE"
       }
     ],
     "asarUnpack": [
@@ -111,7 +109,8 @@
         "from": "solver",
         "to": "solver",
         "filter": [
-          "*.py"
+          "inverse.py",
+          "inverse_benchmark.py"
         ]
       }
     ],
@@ -121,5 +120,16 @@
     ],
     "compression": "maximum",
     "npmRebuild": false
+  },
+  "homepage": "https://github.com/Fiochanqwq/llm4orTT#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Fiochanqwq/llm4orTT.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Fiochanqwq/llm4orTT/issues"
+  },
+  "engines": {
+    "node": ">=24"
   }
 }

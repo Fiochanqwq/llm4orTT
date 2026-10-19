@@ -11,13 +11,7 @@ export function atomicJson(file, value) {
   finally { try { fs.unlinkSync(temp); } catch {} }
 }
 const object = value => value !== null && typeof value === 'object' && !Array.isArray(value);
-export function validWorkspace(value) {
-  return object(value) && value.version === 1 && object(value.preferences) && object(value.providers)
-    && Object.values(value.providers).every(object) && Array.isArray(value.conversations)
-    && value.conversations.every(c => object(c) && typeof c.id === 'string' && typeof c.title === 'string'
-      && Array.isArray(c.messages) && c.messages.every(m => object(m) && typeof m.role === 'string' && typeof m.content === 'string'
-        && (m.automation == null || (object(m.automation) && (m.automation.task == null || object(m.automation.task))))));
-}
+export function validWorkspace(value) { return object(value) && value.version === 1 && object(value.preferences) && object(value.providers) && Object.values(value.providers).every(object); }
 export function readValidated(file, valid) {
   try { const value = JSON.parse(fs.readFileSync(file, 'utf8')); return valid(value) ? value : null; }
   catch (error) { if (error instanceof SyntaxError || error.code === 'ENOENT') return null; throw new StorageError(error); }
@@ -41,18 +35,3 @@ export function loadWorkspace(file, fresh) {
   }
   return { data: saved || fresh(), recovery: exists || saved || badBackup ? { corrupted: quarantined, backupCorrupted, restoredFromBackup: !!saved } : null };
 }
-// Keep references held by in-flight conversations while restoring committed fields.
-export function restoreSnapshot(target, snapshot) {
-  if (Array.isArray(target) && Array.isArray(snapshot)) {
-    const old = [...target];
-    target.splice(0, target.length, ...snapshot.map((value, i) => {
-      const prior = object(value) && value.id ? old.find(x => x?.id === value.id) : old[i];
-      return compatible(prior, value) ? restoreSnapshot(prior, value) : structuredClone(value);
-    }));
-  } else {
-    for (const key of Object.keys(target)) if (!Object.hasOwn(snapshot, key)) delete target[key];
-    for (const [key, value] of Object.entries(snapshot)) target[key] = compatible(target[key], value) ? restoreSnapshot(target[key], value) : structuredClone(value);
-  }
-  return target;
-}
-function compatible(a, b) { return (Array.isArray(a) && Array.isArray(b)) || (object(a) && object(b)); }
