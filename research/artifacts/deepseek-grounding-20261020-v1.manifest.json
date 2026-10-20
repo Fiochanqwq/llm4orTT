@@ -1,0 +1,16 @@
+{
+  "file": "deepseek-grounding-20261020-v1.zip",
+  "bytes": 5825486,
+  "sha256": "012296252392e9816623415d96f4b9148a0944660f52ed1389710de911a90aaf",
+  "files": 1356,
+  "entryPoint": "完整研究报告.html",
+  "actualDeepSeekCalls": 397,
+  "counts": {
+    "scheduled": 2912,
+    "complete": 2707,
+    "failed": 101,
+    "blockedSource": 104
+  },
+  "privacyReview": "Explicit allowlist plus credential-pattern scan passed; no app workspace or user chat included.",
+  "scope": "Frozen raw batch, exploratory prompt additions, and separate engineering/mechanism diagnostics."
+}

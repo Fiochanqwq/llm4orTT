@@ -27,3 +27,18 @@ explicit limitations. The archive includes source attribution, license notices,
 independent formulations/enumeration, raw plans, resource ledgers and hashes.
 Interrupted and overlapping runs are archived separately, never pooled.
 Unknown wasted CPU is labeled unknown. No paid API calls were made.
+
+
+Actual DeepSeek grounding: deepseek-grounding-20261020-v1.zip
+Open 完整研究报告.html.397 real API attempts,27 admitted augmented public
+problems from NL4Opt/MAMO/OptMATH,16 methods/ablations,2912 scheduled rows.
+2707 completed,101 method failures,104 source-blocked rows.
+Includes raw prompts/responses/usage, frozen contexts, all test decisions,
+five figures, all failures, independent checks, original and clarified
+prompt results, separately labeled solver repair and oracle-sign diagnosis.
+Logs and soft penalties are synthetic. Text helps in a limited routing
+cohort but constant-baseline superiority and reliable parameter recovery
+are NOT established. Feedback did not improve complete paired cases.
+Cost from token usage: CNY0.6574–1.3147, not an account invoice.
+Verify offline with python verify_bundle.py. No new paid calls needed.
+Read research/REPRODUCE_LLM_GROUNDING.txt and enclosed DATA-LICENSE.txt.

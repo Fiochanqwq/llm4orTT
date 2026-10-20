@@ -1,0 +1,127 @@
+DeepSeek grounding experiment — 2026-10-20 — software0.1.0
+
+ARTIFACT AND SCOPE
+Download research/artifacts/deepseek-grounding-20261020-v1.zip and extract
+to a new directory. Open 完整研究报告.html. The original local public-stress
+and earlier audit artifacts are untouched.
+The archive contains ALL397 actual model attempts and ALL2912 scheduled rows:
+2707 complete,101 method failures,104 source-blocked rows.
+This is27 admitted augmented public problems, not2912 independent samples.
+Original schedule2576; exploratory clarified-prompt schedule336.
+
+NO-API VERIFICATION (Python standard library only)
+From the extracted folder:
+  python verify_bundle.py
+This verifies file hashes, raw prompt hashes, token totals, every saved
+test decision's feasibility and cost/regret arithmetic, and noise-gap caps.
+It does not call an LLM or claim to independently prove all solver optima.
+CHECKSUMS.json covers all packaged files except itself.
+
+DATA
+NL4Opt: official first12 test records (all admitted), revision
+49f1e0d66b7fdcd33305a7f281c2a7c13f5620ea.
+OptMATH: fixed tour IDs2,8,29,33,63,65,93,124, revision
+f15bbc4477c70db85ad148df8bcc1b780bca0f8c;93 excluded, no replacement.
+MAMO: diet IDs1..8, revision
+2c91069dee5c1e4db4b899eb176ec987d0251bb3.
+Full downloaded source files, attribution and license notices are enclosed.
+One original coefficient is hidden and ONE SYNTHETIC hinge penalty added.
+Generated operational logs and bounded-gap synthetic histories are not
+real human data or official benchmark implicit-preference annotations.
+
+REPLAY IN THE REPOSITORY WITHOUT NEW MODEL CALLS
+Keep an untouched copy of the artifact. In a separate checkout:
+1. Copy reproduction/research, reproduction/scripts and reproduction/test
+   into the corresponding repository directories.
+2. Copy the extracted batch contents into
+   outputs/inverse/deepseek-grounding-20261020-v1.
+3. Copy source-data/llm-grounding-v1 into datasets/llm-grounding-v1 and
+   source-data/mamo into datasets/mamo.
+4. Python3.13.16, highspy1.15.1 and numpy2.5.3 were used. On the original
+   Windows installation the executable is runtime/python/python.exe.
+5. Run:
+   runtime/python/python.exe test/llm-grounding-test.py
+   runtime/python/python.exe test/llm-grounding-stable-test.py
+   runtime/python/python.exe research/llm_grounding_analyze.py
+   runtime/python/python.exe research/llm_grounding_crosscheck.py
+   The analyzer regenerates derived summaries only. It checks the frozen
+   execution code hashes and does not overwrite the raw jobs or API calls.
+6. To recompute a specific job, move its existing file to a separate
+   backup directory in this disposable checkout, then run, for example:
+   runtime/python/python.exe research/llm_grounding.py evaluate --id nl-1117636837 --seed 19
+   Existing job files are deliberately not overwritten by evaluate.
+   Do not modify the archived originals to improve completion counts.
+7. The figure script needs matplotlib and a CJK font. Original plotting
+   Python was the configured Codex dependency runtime; optional libraries
+   were in work/research/plot-deps. Run llm_grounding_report.py after
+   analysis, mechanism diagnostics and engineering repair evidence exist.
+
+ORIGINAL EXECUTION ORDER (PAID WHEN CALLING API)
+See protocol.json and its amendments before replaying a new paid batch.
+API calls are nondeterministic even at temperature0. A new run is a new
+batch, never a replacement of the preserved397 outputs.
+Scripts use the existing desktop application's DeepSeek credentials
+without saving them to results. They do not accept keys embedded in source.
+The frozen expected model is deepseek-flash at https://api.deepseek.com.
+maxOutputTokens2000, timeout60s, concurrency3, no retries,
+400-request cap and20CNY conservative reservation cap.
+
+Preparation, before freezing any outcomes:
+  node scripts/llm-grounding-fetch.mjs
+  runtime/python/python.exe research/llm_grounding.py prepare
+  runtime/python/python.exe research/llm_grounding.py logs
+  node scripts/llm-grounding-api.mjs logs
+  node scripts/llm-grounding-workflow.mjs initial
+  node scripts/llm-grounding-local.mjs
+  node scripts/llm-grounding-workflow.mjs feedback
+  node scripts/llm-grounding-local.mjs --feedback
+  node scripts/llm-grounding-workflow.mjs clarified
+  runtime/python/python.exe research/llm_grounding_clarified.py
+The clarified evaluator runs every source and both seeds with the same
+saved contexts. Do not invoke prepare over a frozen
+batch. New-batch paths must be chosen consistently in the scripts first.
+
+MATHEMATICAL DETAILS
+Training sizes5 and10; seeds19 and43; noise-gap caps0 and0.1.
+10 disjoint test contexts per source-seed, fixed across all methods.
+The cap is true-cost loss/max(1,abs(optimum)), not10% corrupted labels.
+Inverse loss is empirical suboptimality, scaled by max(1,mean absolute
+known-base cost of the observed histories), plus lambda*sum(theta)/20.
+Lambda0.01; theta box[0,20]. Forward LP/MILP exact-optimal status required;
+tours exhaustively enumerated. Epsilon/LLM-anchor is a local adaptation,
+not Wasserstein DRO. Projected subgradient uses50 updates, not an exact
+implementation of another paper's different-domain theorem.
+The full-bank and non-learning baselines know the design thresholds and
+the missing original linear term's sign; not a prior-free full-matrix IO.
+Candidate F1 is exact objective-feature agreement, NOT hard-constraint F1.
+
+AMENDMENTS AND DIAGNOSTICS
+1. ds_anchor restricted toK10 because its numeric prior sees10 histories.
+2. One feedback call may receive a recorded schema/fit error when no
+   residual exists (9 affected source-seed-noise combinations).
+3. Clarified prompt: one call per source per correct/no/shuffled condition,
+   after first-pass explanations exposed missing-price and threshold
+   misunderstandings. All sources retained; no best-of-N selection.
+   This is post-hoc exploratory evidence, not a fresh confirmation set.
+4. solver-repair-checks.json rechecks5 addConstr failures with box-valid
+   sparse cuts. They remain failures in the main results.
+5. mechanism-diagnostics.json corrects ONLY oracle-known wrong cost signs
+   in all4 affected clarified models, both seeds/noise caps (16 rows).
+   Supplying an oracle sign is diagnostic privileged information.
+   These rows are never counted as LLM successes or pooled into the main
+   score table. Feature inactivity does not prove unidentifiability.
+   mechanism-control.json recomputes the unchanged candidates using the
+   same stable solver implementation, isolating the sign intervention
+   from the engineering fix.
+
+LIMITS
+27 fixed small problems, one LLM proposal per source/condition,
+same model generating and reading synthetic logs, supplied physical
+models/monitors, no real scheduling decisions, only2 historical seeds.
+Intervals:5000 paired SOURCE bootstrap resamples, seed20261020,
+unadjusted/exploratory, complete source pairs only; missing IDs retained.
+Cost is token-derived peak/off-peak range, NOT an invoice.
+Main worker resource ledger excludes API waiting, data preparation,
+analysis and packaging; whole-machine energy unmeasured.
+Independent checks cover one augmented context per source:25 passed,
+2 diet enumeration caps. Source parsing is shared, not a blind rebuild.

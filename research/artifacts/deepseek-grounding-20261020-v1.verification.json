@@ -1,0 +1,9 @@
+{
+  "status": "passed",
+  "fileHashes": 1355,
+  "arithmeticAndEvidenceChecks": 141969,
+  "rows": 2912,
+  "apiRecords": 397,
+  "paidAPICallsDuringVerification": 0,
+  "scope": "Hashes, prompt integrity, score arithmetic, feasibility, historical noise caps. Not an independent proof of every oracle optimum or semantic correctness."
+}
