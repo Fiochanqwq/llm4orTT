@@ -49,6 +49,7 @@ try {
   await (await download).saveAs(path.join(directory, 'export.json'));
   const exported = JSON.parse(fs.readFileSync(path.join(directory, 'export.json'), 'utf8'));
   if (exported.status !== 'optimal' || !exported.trace.length || !exported.input) throw Error('Invalid evidence export');
+  if (exported.spending.modelCalls !== 0 || !exported.localAnalysis?.identification?.ranges.length) throw Error('Offline analysis or zero-call accounting missing');
   await page.getByLabel('运营日志 · 一行一条').fill('修改后的运营备注');
   await expect(page.getByText('输入已改变，以下是上一次运行结果。')).toBeVisible();
   await page.reload();

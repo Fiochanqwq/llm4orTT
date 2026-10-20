@@ -45,4 +45,14 @@ GitHub Actions 对推送与 PR 执行构建、接口和真实求解器测试。�
 
 实现边界与实验协议见 [研究说明](docs/CONTEXTUAL_INVERSE.md)。当前内置评测是合成排班数据，不代表已完成 NLP4LP 全量评测。新方向代码位于 `server/inverse.mjs`、`solver/inverse.py` 和 `src/Inverse.tsx`。
 
+新增独立的 MAMO 公开数据实验管线：固定审计40道配餐题，39道重构模型与公开答案一致；使用受控生成的日志和历史做遮蔽恢复、少样本噪声与消融比较。数据来源、数学公式、排除记录和复算方法见 [MAMO复现说明](research/REPRODUCE_MAMO.txt)。这是一类问题的探索性实验，不能替代跨领域评测或真实人工决策验证。`npm run test:mamo` 不需要下载研究数据；`npm run experiment:mamo` 需要归档的冻结数据和模型回答。
+
 原始代码保留全部权利，见 [LICENSE](LICENSE)。第三方依赖许可见 [THIRD_PARTY_NOTICES.txt](THIRD_PARTY_NOTICES.txt)。
+
+### MAMO事后审计（2026-10-20）
+
+已公开的完整证据包在 [research/artifacts](research/artifacts/README.txt)。下载其中 ZIP，解压后打开“审计报告.html”，可以查看逐题数据、旧报告、复算脚本和结论处置记录。
+
+旧实验分数和测试集保持不变。审计发现：主比较中2号、39号题占本方法总损失的86.50%；零价格导致最优解不唯一，改变变量排列会改变决策遗憾；25/62个隐藏价格从未被训练历史激活。文本、稀疏以及相对固定报10的额外收益均未证实，不能将当前结果写成真实参数恢复或一般隐式约束发现的证明。
+
+`npm run audit:mamo` 从归档证据执行本地审计；`npm run audit:mamo -- --recompute` 在新的独立输出目录从零重算。两者都不调用付费模型。结果包含原始报告副本、全部方法对照、参数范围、最优解退化证书、逐题下载及结论处置账本；`npm run qa:mamo-audit` 检查报告。审计数学与证据核验在 `research/mamo_audit.py` 和 `research/mamo_audit_verify.py`，绘图在 `research/mamo_audit_report.py`。

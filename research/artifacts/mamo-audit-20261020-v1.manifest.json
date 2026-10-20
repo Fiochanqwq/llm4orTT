@@ -1,0 +1,8 @@
+{
+  "file": "mamo-audit-20261020-v1.zip",
+  "sha256": "7700f7412e7b3489d681e8ea0370abb10ba7670544039220c55017dc47e90386",
+  "bytes": 6598255,
+  "archivedFiles": 278,
+  "credentialPatternScan": "passed; public dataset and controlled experiment only",
+  "sourceRevision": "2c91069dee5c1e4db4b899eb176ec987d0251bb3"
+}

@@ -109,7 +109,8 @@ export async function startServer({ directory, staticDir, port = 43127, dev = fa
         try {
           const result = await cancellable(res, 600000, async signal => {
             const config = request.useLLM === true ? await store.credentials(request.provider || store.data.preferences.provider) : null;
-            const value = await inverseRunner(request.input, { config, generator, signal, useLLM: request.useLLM === true, rounds: request.rounds ?? 3 });
+            const value = await inverseRunner(request.input, { config, generator, signal, useLLM: request.useLLM === true, rounds: request.rounds ?? 3,
+              localAnalysis: request.localAnalysis === true, maxModelCalls: request.maxModelCalls ?? 1, cacheDirectory: path.join(directory, 'inverse-proposal-cache') });
             signal.throwIfAborted(); store.assertWritable(); return saveInverseRun(directory, value);
           });
           return json(res, 201, result);

@@ -13,7 +13,7 @@ const entries = listPackage(archive);
 if (entries.some(f => /^[/\\](node_modules|qa|\.local|test|experiments|baselines)([/\\]|$)/.test(f))) throw Error('Development data was packaged');
 if (entries.some(f => /(?:experiments-cli|optimization|compact-protocol|slime)/i.test(f))) throw Error('Legacy modules were packaged');
 const solverFiles = fs.readdirSync(path.join(path.dirname(executablePath), 'resources/solver')).sort();
-if (JSON.stringify(solverFiles) !== JSON.stringify(['inverse.py', 'inverse_benchmark.py'])) throw Error('Unexpected solver modules: ' + solverFiles.join(','));
+if (JSON.stringify(solverFiles) !== JSON.stringify(['inverse.py', 'inverse_benchmark.py', 'inverse_local.py'])) throw Error('Unexpected solver modules: ' + solverFiles.join(','));
 if (JSON.parse(extractFile(archive, 'package.json')).version !== version) throw Error('Wrong packaged version');
 fs.mkdirSync(path.join(directory, 'workspace'), { recursive: true });
 fs.writeFileSync(path.join(directory, 'workspace/workspace.json'), JSON.stringify({ version: 1, preferences: {}, providers: {}, conversations: [{ id: 'legacy-chat-fixture', title: '以前的普通对话', messages: [{ id: 'old-user', role: 'user', content: '普通聊天内容恢复检查' }] }] }));
@@ -40,6 +40,7 @@ try {
   await expect.poll(() => { try { return JSON.parse(fs.readFileSync(exportPath, 'utf8')).status; } catch { return ''; } }).toBe('optimal');
   fs.copyFileSync(exportPath, path.join(output, 'desktop-solver-evidence.json'));
   const evidence = JSON.parse(fs.readFileSync(exportPath, 'utf8'));
+  if (evidence.spending?.modelCalls !== 0 || !evidence.localAnalysis?.identification?.ranges.length) throw Error('Packaged local analysis did not complete without model calls');
   if (evidence.status !== 'optimal' || !evidence.versions.highspy || !evidence.inputSha256) throw Error('Incomplete solver evidence');
   await page.locator('.inverse-workspace').evaluate(element => { element.scrollTop = 0; });
   if (errors.length) throw Error(errors.join('\n'));

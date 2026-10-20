@@ -12,7 +12,7 @@
     "build": "node scripts/clean-dist.mjs && tsc --noEmit && vite build",
     "start": "node server/launcher.mjs --browser",
     "desktop": "electron .",
-    "test": "node --test --test-timeout=60000 test/inverse.test.mjs test/workspace.test.mjs test/providers.test.mjs test/launcher.test.mjs test/loopback.test.mjs test/chat.test.mjs",
+    "test": "node --test --test-timeout=60000 test/inverse.test.mjs test/inverse-economy.test.mjs test/workspace.test.mjs test/providers.test.mjs test/launcher.test.mjs test/loopback.test.mjs test/chat.test.mjs",
     "test:ci": "npm test",
     "test:inverse": "node scripts/inverse.mjs test && node --test test/inverse.test.mjs",
     "benchmark:inverse": "node scripts/inverse.mjs --out outputs/inverse/synthetic-benchmark.json --seeds 17",
@@ -24,7 +24,12 @@
     "solver:prepare": "node scripts/setup-solver.mjs",
     "qa:chat": "node scripts/chat-qa.mjs",
     "experiment:replay": "node scripts/research-local.mjs",
-    "test:research": "node scripts/research-local.mjs --test"
+    "test:research": "node scripts/research-local.mjs --test",
+    "experiment:mamo": "node scripts/mamo-local.mjs",
+    "test:mamo": "node scripts/mamo-test.mjs",
+    "qa:mamo": "node scripts/mamo-report-qa.mjs",
+    "audit:mamo": "node scripts/mamo-audit.mjs",
+    "qa:mamo-audit": "node scripts/mamo-audit-qa.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "0.132.1",
@@ -110,6 +115,7 @@
         "to": "solver",
         "filter": [
           "inverse.py",
+          "inverse_local.py",
           "inverse_benchmark.py"
         ]
       }

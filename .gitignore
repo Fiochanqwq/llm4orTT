@@ -15,6 +15,7 @@ archive/
 # Local research data and historical source snapshots (never upload)
 experiments/
 work/research/
+/work/
 # Saved acceptance conversations are research data even under test/fixtures.
 /test/fixtures/clarification-v077.json
 /test/fixtures/robustness-v076.json

@@ -1,0 +1,86 @@
+llm4orTT 0.1 — MAMO first-stage research milestone (2026-10-20)
+
+Target: AAAI main technical track, Constraint Satisfaction and Optimization.
+AAAI-27 submission deadline has passed; target a future open cycle. No unannounced deadline is assumed.
+This milestone is exploratory evidence, not a claim of submission readiness or new theory.
+
+DATA AND RIGHTS
+Official repository: https://github.com/FreedomIntelligence/Mamo
+Pinned revision: 2c91069dee5c1e4db4b899eb176ec987d0251bb3
+Source paper: https://arxiv.org/abs/2405.13144
+License: CC BY-SA 4.0. Attribute Xuhan Huang, Qingning Shen, Yan Hu, Anningzhe Gao and Benyou Wang.
+Source data and derived research data retain the source attribution/share-alike terms.
+The app code license is not changed by this separate research dataset.
+NLP4LP official Hugging Face source required authentication; no restricted copy was bypassed.
+
+SCOPE
+All 40 diet questions (IDs 1–40) selected by problem family, before inverse results.
+39 reconstructed integer models match official optimum values; ID 23 has ambiguous duplicated protein requirements and is excluded, without replacement.
+Integer domains are not explicit in every question; objective agreement alone is not a proof of semantic equivalence. Continuous relaxation values are also recorded.
+IDs divisible by 5 form an 8-problem development cohort; 31 remaining problems are reported as evaluation. No hyperparameters were tuned using either cohort's outcomes.
+These are variations from one family; 31 is not 31 independent application domains.
+Known prices and nutrient demands are perturbed to generate contextual train/test instances.
+Two actual source unit costs are masked; three extra nutrient-excess penalties have true weight zero.
+Chinese logs are controlled templates containing semantic clues, not real human logs. Original questions, answers, hidden weights and test optima are withheld from learner/model requests.
+Historical choices are solver-generated feasible near-optima, not collected human decisions.
+The candidate dictionary is deliberately small; the no-text baseline is NOT a full unknown-matrix inverse problem.
+
+MATHEMATICS
+P_k(theta): min over integer x>=0, A_k x>=b_k:
+  c0_k^T x + sum_j theta_j phi_j(x); 0<=theta_j<=20.
+Known c0 was intended as a scale anchor, but the subsequent audit proves it is insufficient when observed choices never activate known-cost variables. Two phi are food quantities; three are max(0,A_i x/b_i-1.2).
+Inverse objective: sum_k e_k/(K*s) + lambda*sum_j theta_j/20.
+s=max(1, mean_k c0_k^T xhat_k), computed only from observed training data.
+For each forward counterexample x: e_k >= c0_k^T(xhat_k-x)+sum_j theta_j(phi_j(xhat_k)-phi_j(x)).
+Each iteration solves the inverse LP and each forward MILP to certified optimality.
+Stop when every separation residual is <=1e-6; 80 iterations or uncertified status counts as a failure.
+For numerical cut coefficients <=1e-9, remove them and add 20*min(coefficient,0) to the RHS so the cut stays a lower bound.
+Integer outputs are snapped only after integrality and feasibility checks.
+Regularization lambda=.01 is fixed; ablation lambda=0. No hidden/test data is used for fitting or local residual feedback.
+No unique parameter identification or finite-sample consistency theorem is claimed.
+
+DESIGN
+39 problems x K in {5,10,20} x noise cap in {0,.05,.10,.15} x 9 local methods = 4212 planned rows.
+31 original batched pure-model guessing rows only at K=10 and noise=.10. Original total 4243 rows.
+After a three-case diagnostic revealed batch sensitivity, a separately frozen exploratory control completes single-item guesses for all 31 evaluation cases. Grand total 4274 rows; original results are retained, not replaced.
+Primary outcome: mean test regret / max(1,abs(oracle cost)), averaged over 20 unseen contexts per source problem.
+Secondary: masked-cost MAE, cosine similarity, objective-term support F1 (NOT implicit hard-constraint F1).
+Noise means a relative suboptimality GAP CAP, not percentage of corrupted decisions; realized gaps and rates are reported.
+K subsets are nested training prefixes. Identical contexts, histories and proposals are shared by all paired methods.
+Five planned contrasts are all shown; bootstrap resamples source IDs, not individual contexts. Same-family 95% percentile intervals are descriptive, not cross-domain confidence guarantees.
+Freeze precedes paid requests/results. v1 was stopped for a highspy warning-status wrapper error; v2 preserves all data, model outputs and design, repairs only numerical implementation. Failed v1 remains archived and is not mixed into v2.
+
+RUNNING
+Project root is the working directory. The app's portable runtime/python/python.exe has numpy and highspy.
+1. node scripts/mamo-fetch.mjs
+   Downloads/checks the four official files at the pinned revision. If local network resets Node TLS, PowerShell Invoke-WebRequest can fetch the identical URLs; compare SHA256 and keep source-manifest.json.
+2. runtime/python/python.exe -X utf8 test/mamo-experiment-test.py
+3. New dataset preparation only: runtime/python/python.exe -X utf8 research/mamo_experiment.py audit
+   Then: runtime/python/python.exe -X utf8 research/mamo_experiment.py freeze
+   For exact reproduction of this repaired v2, use archived public/oracle/freeze files; those were generated in v1 and deliberately reused unchanged.
+4. Paid optional step: node scripts/mamo-llm.mjs proposals
+   Then: node scripts/mamo-llm.mjs guesses
+   Existing cached responses are skipped. Original frozen cap16: 13 primary requests plus3 exploratory diagnostic requests. No retries.
+   A separate single-protocol.json was frozen after detecting batch sensitivity: 28 additional single-item requests, reusing3 diagnostic answers, total44 actual requests across both phases. This is an exploratory amendment, not a fresh confirmatory study. Use archived cache for zero new API calls.
+   Complete that separately budgeted control with: node scripts/mamo-llm.mjs single
+5. node scripts/mamo-local.mjs
+   Six one-thread worker processes, checkpoint after each source problem, safely resumes completed rows.
+   To recompute from scratch without changing this archive, copy research source and frozen data/cache into a separate workspace excluding the rows directory, then run the same command there.
+6. runtime/python/python.exe -X utf8 research/mamo_experiment.py guesses
+   runtime/python/python.exe -X utf8 research/mamo_single_evaluate.py
+7. runtime/python/python.exe -X utf8 research/mamo_crosscheck.py
+8. Run research/mamo_report.py using Python3.12 with work/research/plot-deps installed. Packages and versions are saved in plot-environment.json. Mathematical solving uses the app's separate Python3.13 runtime.
+9. node scripts/mamo-report-qa.mjs
+
+ARCHIVE
+outputs/inverse/mamo-diet-20261020-v2 contains protocol, schedule, frozen hashes, source audit,
+public learner inputs, oracle answers, exact paid prompts/responses/token usage, per-condition results,
+paired contrasts, full report, PNG and vector PDF. No API keys are copied.
+The original desktop application/chat is not modified by this research pipeline.
+
+REFERENCES AND WORKFLOW ACKNOWLEDGMENT
+Huang et al. LLMs for Mathematical Modeling: Towards Bridging the Gap between Natural and Mathematical Languages. https://arxiv.org/abs/2405.13144
+Mohajerin Esfahani, Shafieezadeh-Abadeh, Hanasusanto and Kuhn. Data-driven Inverse Optimization with Imperfect Information. https://arxiv.org/abs/1512.05489
+Kitaoka. Exact Solution to Data-Driven Inverse Optimization of MILPs in Finite Time via Gradient-Based Methods. https://arxiv.org/abs/2405.14273
+Kassis, Agarwal, He, Patel and Brueckner (2026). Scientific Agent Skills: A Library of Procedural Knowledge for Research Agents. https://doi.org/10.48550/arXiv.2609.00065
+The experimental-design, statistical-analysis and scientific-visualization skill procedures informed the workflow; this acknowledgment does not endorse the experimental conclusions.

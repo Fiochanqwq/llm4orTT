@@ -1,0 +1,36 @@
+import {chromium,expect} from '@playwright/test';
+import fs from 'node:fs';
+import path from 'node:path';
+import {pathToFileURL} from 'node:url';
+const out=path.resolve(process.argv[2]||'outputs/inverse/mamo-audit-20261020-v1');
+const browser=await chromium.launch({executablePath:'C:/Program Files/Google/Chrome/Application/chrome.exe',headless:true});
+try{
+ const page=await browser.newPage({viewport:{width:1440,height:1000}}),errors=[];
+ page.on('pageerror',e=>errors.push(e.message));
+ await page.goto(pathToFileURL(path.join(out,'审计报告.html')).href);
+ await expect(page.getByRole('heading',{name:'这张图的毛病，已经逐题查清'})).toBeVisible();
+ await expect(page.locator('#problem option')).toHaveCount(31);
+ await expect(page.locator('#detail')).toContainText('原始题号 39');
+ await expect(page.locator('#detail')).toContainText('861.813%');
+ await page.selectOption('#problem','1');
+ await expect(page.locator('#detail')).toContainText('历史使用 0/10');
+ const [download]=await Promise.all([page.waitForEvent('download'),page.locator('#download').click()]);
+ await download.saveAs(path.join(out,'qa-case-1.json'));
+ const evidence=JSON.parse(fs.readFileSync(path.join(out,'qa-case-1.json'),'utf8'));
+ if(evidence.id!==1||evidence.rows.length!==11||evidence.hidden[0].positiveHistories!==0)throw Error('Downloaded evidence does not match selected case');
+ const links=await page.locator('a[href]').evaluateAll(as=>as.map(a=>a.getAttribute('href')).filter(x=>!x.startsWith('#')&&!x.startsWith('http')));
+ const missing=links.filter(x=>!fs.existsSync(path.join(out,decodeURIComponent(x))));
+ if(missing.length)throw Error('Broken evidence links: '+missing.join(', '));
+ if(await page.locator('img').evaluateAll(imgs=>imgs.length!==4||imgs.some(i=>!i.complete||i.naturalWidth===0)))throw Error('Missing figures');
+ await page.selectOption('#problem','39');
+ await page.evaluate(()=>scrollTo(0,0));
+ await page.screenshot({path:path.join(out,'报告首页.png')});
+ await page.screenshot({path:path.join(out,'报告全页.png'),fullPage:true});
+ await page.setViewportSize({width:390,height:844});
+ await page.evaluate(()=>scrollTo(0,0));
+ await page.screenshot({path:path.join(out,'手机首页.png')});
+ if(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth))throw Error('Mobile overflow');
+ if(errors.length)throw Error(errors.join('\n'));
+ const result={status:'passed',checks:['31 selectable cases','39 catastrophic row','1 inactive price row','11 methods per downloaded case','all evidence links exist','4 complete figures','desktop/mobile no overflow','no browser errors']};
+ fs.writeFileSync(path.join(out,'report-qa.json'),JSON.stringify(result,null,2));console.log(JSON.stringify(result));
+}finally{await browser.close()}

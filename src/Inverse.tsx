@@ -11,6 +11,9 @@ type Result = {
   trace: { iteration: number; gap: number; cutsAdded: number }[];
   history: { round: number; meanResidual: number; status: string; accepted?: boolean }[];
   input: Record<string, unknown>;
+  spending?: { modelCalls: number; cacheHits: number; maxModelCalls: number; inputTokens: number; outputTokens: number; usageComplete: boolean };
+  localAnalysis?: { status: string; selectedLambda?: number; supersededByModelProposal?: boolean; notes?: string[];
+    identification?: { ranges: { id: string; label: string; status: string; lower: number | null; upper: number | null }[] } };
 };
 type Saved = { id: string; createdAt: string; meanResidual: number; status: string };
 const format = (n: number) => Number.isFinite(n) ? n.toLocaleString('zh-CN', { maximumFractionDigits: 5 }) : '未计算';
@@ -18,6 +21,7 @@ const format = (n: number) => Number.isFinite(n) ? n.toLocaleString('zh-CN', { m
 export function Inverse({ provider }: { provider: string }) {
   const [draft, setDraft] = useState(() => sessionStorage.getItem('inverse-draft-v1') || ''), [result, setResult] = useState<Result | null>(null);
   const [busy, setBusy] = useState(false), [error, setError] = useState(''), [useLLM, setUseLLM] = useState(false);
+  const [localAnalysis, setLocalAnalysis] = useState(true);
   const [saved, setSaved] = useState<Saved[]>([]), [stale, setStale] = useState(false);
   const controller = useRef<AbortController | null>(null), file = useRef<HTMLInputElement>(null);
   const refresh = () => api<Saved[]>('/inverse/runs').then(setSaved).catch(e => setError(e.message));
@@ -33,7 +37,7 @@ export function Inverse({ provider }: { provider: string }) {
     try {
       const input = JSON.parse(draft);
       controller.current = new AbortController(); setBusy(true);
-      const value = await api<Result>('/inverse/recover', 'POST', { input, provider, useLLM, rounds: 3 }, controller.current.signal);
+      const value = await api<Result>('/inverse/recover', 'POST', { input, provider, useLLM, localAnalysis, maxModelCalls: 1, rounds: 3 }, controller.current.signal);
       setResult(value); setStale(false); await refresh();
     } catch (e) { setError((e as Error).name === 'AbortError' ? '本次运行已停止。' : (e as Error).message); }
     finally { setBusy(false); controller.current = null; }
@@ -70,8 +74,9 @@ export function Inverse({ provider }: { provider: string }) {
       <textarea id="inverse-logs" className="inverse-text inverse-logs" value={logs} disabled={busy || !valid} onChange={e => changeText('logs', e.target.value.split('\n'))}/>
       <details className="inverse-data"><summary>查看或编辑历史决策与候选模型 · JSON</summary><label className="inverse-editor-label" htmlFor="inverse-input">任务、日志、候选特征与历史决策</label>
       <textarea id="inverse-input" className="inverse-editor" spellCheck={false} value={draft} disabled={busy} onChange={e => edit(e.target.value)}/></details>
-      <label className="inverse-toggle"><input type="checkbox" checked={useLLM} disabled={busy} onChange={e => { setUseLLM(e.target.checked); setStale(!!result); }}/>使用已配置的大模型补充结构假设并自动反馈（最多 3 轮）</label>
-      <p className="inverse-note">示例由真实求解器生成，日志使用固定模板。可离线运行；启用大模型后，任务文本与训练样本将发送给所选服务商。</p>
+      <label className="inverse-toggle"><input type="checkbox" checked={localAnalysis} disabled={busy} onChange={e => { setLocalAnalysis(e.target.checked); setStale(!!result); }}/>本地自动检查：选择正则化强度、检查权重范围（不调用大模型）</label>
+      <label className="inverse-toggle"><input type="checkbox" checked={useLLM} disabled={busy} onChange={e => { setUseLLM(e.target.checked); setStale(!!result); }}/>需要时请大模型补充规则（本次最多 1 次，重复结果优先复用）</label>
+      <p className="inverse-note">默认在电脑上计算已有候选规则，不花模型调用费。勾选大模型后，任务文本与训练样本才可能发送给服务商；已能解释历史时自动跳过。本地检查假定历史可以交叉验证，时间先后有影响的数据请关闭自动检查。</p>
       <div className="inverse-run">{busy ? <><span role="status">正在拟合权重并验证残差</span><button onClick={() => controller.current?.abort()}><Square size={14}/>停止</button></> : <button className="primary-button" onClick={run} disabled={!draft}><Play size={15}/>运行三步重构</button>}</div>
       {error && <p className="solver-error" role="alert">{error}</p>}
     </div><div className="inverse-results">
@@ -81,10 +86,18 @@ export function Inverse({ provider }: { provider: string }) {
           <div className="inverse-metrics"><div><span>平均次优性残差</span><strong>{format(result.meanResidual)}</strong></div><div><span>保留假设</span><strong>{result.hypotheses.filter(h => h.retained).length}<small> / {result.hypotheses.length}</small></strong></div><div><span>异常历史样本</span><strong>{result.anomalies.length}</strong></div></div>
           <p className="inverse-note">{result.status === 'optimal' ? '逆问题已通过求解器最优性检查' : '达到迭代上限，结果尚未收敛'} · {result.method === 'strong_duality' ? 'LP 强对偶重构' : '整数前向求解与反例迭代'}</p>
           <p className="inverse-note">权重不一定唯一。零残差表示能解释这些历史选择，不代表已经恢复唯一的真实规则。</p>
+          {result.spending && <p className="inverse-note">本轮模型调用 {result.spending.modelCalls} 次 · 复用已有回答 {result.spending.cacheHits} 次{!result.spending.usageComplete ? ' · 服务未返回完整用量' : ''}</p>}
         </div>
+        {result.localAnalysis && <div className="inverse-card"><h2>本地数学检查</h2>
+          {result.localAnalysis.selectedLambda !== undefined && <p>自动选择的正则化强度：{format(result.localAnalysis.selectedLambda)}。使用训练历史内部验证，不查看测试答案。</p>}
+          {result.localAnalysis.supersededByModelProposal && <p className="inverse-note">以下范围对应大模型补充前的本地模型。</p>}
+          {result.localAnalysis.notes?.map((note, i) => <p className="inverse-note" key={i}>{note}</p>)}
+          {result.localAnalysis.identification && <><p className="inverse-note">范围越宽，越不能把某个数字当成唯一答案。范围按最小训练残差计算，可能与带惩罚的估计不同；它不是置信区间。</p>
+            {result.localAnalysis.identification.ranges.map(r => <p key={r.id}>{r.label}：{r.status === 'optimal' && r.lower !== null && r.upper !== null ? `${format(r.lower)} ～ ${format(r.upper)}` : '未完成证明，暂不报告范围'}</p>)}</>}
+        </div>}
         <div className="inverse-card"><h2>经验 → 白盒规则</h2><p className="inverse-note">下列公式展示第一个历史上下文中的成本项；其余上下文保存在导出证据中。</p>{result.hypotheses.map(h => <article className={'inverse-hypothesis ' + (!h.retained ? 'pruned' : '')} key={h.id}><div><b>{h.label}</b><span>{h.retained ? '保留' : '剔除'} · θ = {format(h.weight)}</span></div><p>“{h.source || '用户提供的候选假设'}”</p><code>{format(h.weight)} × {formula(h.id)}</code></article>)}</div>
         <div className="inverse-card"><h2>残差与反馈</h2><p className="inverse-note">条越长，表示这条历史选择越难被当前规则解释。</p><div className="inverse-bars">{result.residuals.map(r => <div key={r.id}><span>{r.id}</span><div><i style={{ width: `${100 * r.residual / Math.max(.000001, ...result.residuals.map(x => x.residual))}%` }}/></div><b>{format(r.residual)}</b></div>)}</div>
-          <p className="inverse-note">{({ template_only: '本轮使用输入中的结构假设，未调用大模型。', residual_threshold: '残差已低于反馈阈值。', residual_plateau: '残差进入平台期，自动停止。', proposal_not_improved: '补充假设未改善拟合，保留上一轮结果。', round_limit: '已达到自动反馈轮数上限。' } as Record<string, string>)[result.stopReason]}</p>
+          <p className="inverse-note">{({ template_only: '本轮使用输入中的结构假设，未调用大模型。', local_sufficient: '本地已达到残差要求，省下一次模型调用。', model_budget: '已达到本轮模型调用上限，保留已有结果。', prompt_too_large: '输入超过省费模式上限，保留本地结果。', model_failed: '模型未完成，保留已有求解结果，没有自动重试。', uncertified_baseline: '基础求解尚未证明最优，先保留本地结果。', residual_threshold: '残差已低于反馈阈值。', residual_plateau: '残差进入平台期，自动停止。', proposal_not_improved: '补充假设未改善拟合，保留上一轮结果。', round_limit: '已达到自动反馈轮数上限。' } as Record<string, string>)[result.stopReason]}</p>
           <details><summary>查看求解与反馈轨迹</summary><pre>{JSON.stringify({ feedback: result.history.map(({ round, meanResidual, status, accepted }) => ({ round, meanResidual, status, accepted })), solver: result.trace }, null, 2)}</pre></details>
         </div>
       </> : <div className="inverse-card inverse-empty"><FlaskConical size={42}/><h2>让历史选择解释“为什么”</h2><p>先运行内置示例。系统会估计夜班、交接与跨区支援的隐性代价，并检查“排班表颜色”是否只是无关线索。</p><p className="inverse-note">这是合成排班演示，尚不是 NLP4LP 100 模型评测结果。</p></div>}

@@ -10,13 +10,14 @@ export function deepseekRequest(config) {
   const legacyChat = /^deepseek-(?:chat|coder|v[23])(?:$|[-.])/.test(model);
   const limit = modern ? 393216 : reasoner ? 65536 : legacyChat ? 4096 : null;
   const maxTokens = limit ? Math.min(config.maxTokens, limit) : config.maxTokens;
+  const economy = modern && config.economy === true;
   return {
     options: { max_tokens: maxTokens, ...(modern ? {
-      thinking: { type: 'enabled' }, reasoning_effort: 'high', stream_options: { include_usage: true }
+      thinking: { type: economy ? 'disabled' : 'enabled' }, ...(economy ? {} : { reasoning_effort: 'high' }), stream_options: { include_usage: true }
     } : {}) },
-    profile: modern ? 'modern-thinking' : reasoner ? 'legacy-reasoner' : legacyChat ? 'legacy-chat' : 'compatible',
-    thinking: modern || reasoner ? 'enabled' : 'server-default',
-    reasoningEffort: modern ? 'high' : null,
+    profile: economy ? 'modern-economy' : modern ? 'modern-thinking' : reasoner ? 'legacy-reasoner' : legacyChat ? 'legacy-chat' : 'compatible',
+    thinking: economy ? 'disabled' : modern || reasoner ? 'enabled' : 'server-default',
+    reasoningEffort: modern && !economy ? 'high' : null,
     maxTokens
   };
 }

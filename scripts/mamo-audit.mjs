@@ -1,0 +1,21 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import {spawn} from 'node:child_process';
+const root=process.cwd();
+const recompute=process.argv.includes('--recompute');
+const out=path.join(root,'outputs/inverse',recompute?'mamo-audit-recompute-'+new Date().toISOString().replace(/[:.]/g,'-'):'mamo-audit-20261020-v1');
+const env={...process.env,MAMO_AUDIT_OUT:out};
+const python=path.join(root,'runtime/python/python.exe');
+const authorPython=process.env.MAMO_PLOT_PYTHON||path.join(process.env.USERPROFILE,'.cache/codex-runtimes/codex-primary-runtime/dependencies/python/python.exe');
+function run(exe,args){return new Promise((resolve,reject)=>{const p=spawn(exe,args,{cwd:root,env,windowsHide:true,stdio:['ignore','pipe','pipe']});let stderr='';p.stdout.on('data',b=>{if(!args.includes('describe'))process.stdout.write(b)});p.stderr.on('data',b=>stderr+=b);p.on('error',reject);p.on('exit',code=>code===0?resolve():reject(Error(`${args.join(' ')} failed (${code}): ${stderr}`)))});}
+await run(python,['-X','utf8','research/mamo_audit.py','describe']);
+const addendum=path.join(out,'order-protocol-addendum.json');
+if(!fs.existsSync(addendum))fs.writeFileSync(addendum,JSON.stringify({createdUtc:new Date().toISOString(),phase:'post-result full-cohort diagnostic',reason:'Replay previously defined representation-sensitivity audit',scope:'ALL 31 evaluation problems and ALL 11 primary methods; same theta and original held-out contexts',order:'Reverse variables and constraints; seed17; never replace original scores'},null,2));
+await run(python,['-X','utf8','research/mamo_audit.py','sensitivity']);
+const ids=JSON.parse(fs.readFileSync(path.join(out,'descriptive.json'),'utf8')).activation.map(p=>p.id);
+const queue=ids.flatMap(id=>['profile','order'].map(mode=>({id,mode})));
+await Promise.all(Array.from({length:5},async()=>{for(let task;task=queue.shift();){await run(python,['-X','utf8','research/mamo_audit.py',task.mode,'--id',String(task.id)])}}));
+await run(python,['-X','utf8','research/mamo_audit_verify.py']);
+if(!fs.existsSync(authorPython))throw Error('Set MAMO_PLOT_PYTHON to the pinned authoring Python; mathematical evidence is already saved.');
+await run(authorPython,['-X','utf8','research/mamo_audit_report.py']);
+console.log(JSON.stringify({status:'complete',out,paidCalls:0,originalScores:'unchanged'}));
