@@ -1,0 +1,11 @@
+{
+  "stage": "post-hoc information-parity check, specified before this added control is computed",
+  "reason": "Primary non-learning controls use the controlled template's distinction between explicitly missing costs and optional nuisance features. Add a control that does not make that distinction within the selected three features.",
+  "method": "unit_selected3",
+  "theta": [1, 1, 1, 0, 0],
+  "inputs": "All39 frozen admitted source-seed inputs, same10 test contexts; no new or replaced source, seed or test",
+  "metric": "Unchanged decision regret; one result per source-seed, no history learning",
+  "limits": "Same5-second forward solver limit, no worst-face diagnostics for this additional control",
+  "comparison": "Exploratory paired-by-source contrast against primary text_l1 at K10/noise0.1; full-cohort mean only when every admitted run completes",
+  "preservation": "Never pool into or overwrite the original nine-method schedule; all failures and resource use kept separately"
+}

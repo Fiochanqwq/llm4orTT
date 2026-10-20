@@ -1,0 +1,153 @@
+Public benchmark stress test, 2026-10-20; application version remains 0.1.0.
+
+Read 压力测试报告.html and 实在结论.txt in the evidence ZIP. The main outcome is
+decision regret; hidden-price MAE is a separate outcome. They are never treated
+as interchangeable evidence. No paid LLM calls, free-text interpretation,
+human behavioral validation or implicit-constraint recovery is claimed.
+
+Frozen population
+NETLIB: afiro, adlittle, blend (blend mirror unavailable, retained).
+OR-Library: all seven Petersen instances in mknap1.
+TSPLIB95: gr17, gr21, gr24, fri26.
+These deliberately small public instances permit local exact computations;
+they are not a representative random sample of industrial optimization.
+14 candidates; 13 admitted against published source optima; no replacement.
+Seeds 19/43/67, K=5/10, cost-gap cap=0/0.1, nine fixed methods.
+All 1,512 scheduled outcomes are represented, including 108 source-blocked
+outcomes. Failure counts must not be confused with unavailable-source counts.
+
+Reproduce
+1. Obtain this repository at the artifact's accompanying commit and run
+   npm ci
+   npm run solver:prepare
+   npm run test:stress
+2. Copy source-data from the ZIP to datasets/stress-public-v1 in the repository.
+   Keep original download-manifest.json. The current download script is for a
+   fresh acquisition only; network availability and timeouts may differ.
+3. From the repository root, use a NEW output directory:
+   PowerShell: $env:STRESS_OUT='outputs/inverse/public-stress-reproduction'
+   then npm run experiment:stress
+   The runner refuses an existing execution ledger. Do not erase evidence to
+   bypass that guard. NETLIB loading uses a repository-relative ASCII path
+   because this Windows HiGHS build failed on Unicode absolute MPS paths.
+4. With the same STRESS_OUT, run these scripts using runtime/python/python.exe
+   (Linux/macOS: use the solver Python selected by server/python-runtime.mjs):
+   research/stress_analyze.py
+   research/stress_crosscheck.py
+   research/stress_mechanisms.py
+   research/stress_control.py
+   research/stress_report.py
+   The report additionally needs matplotlib. The historical MAMO witness is
+   already embedded in mechanisms.json; absent older artifacts are reported.
+5. npm run qa:stress -- <output-directory>
+   Browser QA requires Chrome (set CHROME_PATH if needed).
+6. Compare input SHA256 values with freeze.json and artifact-files.json.
+   Solver timings and tied default solutions can differ across environments.
+   A timeout must remain an outcome, never become zero regret.
+
+Mathematical model
+Minimize (b_k + F theta)^T x over fixed feasible X. Original nonzero objective
+costs at two frozen locations are hidden; three other signed unit features
+are nuisance candidates. The parameter signs are assumed known. Divide by
+the median absolute nonzero KNOWN original cost; never by a hidden true cost.
+theta lies in [0,10]^5, with disallowed coordinates fixed to zero.
+The controlled template supplies two true candidates plus one distractor.
+It has oracle structure information and is not a learned natural-language
+system. The full bank has five features, not a free matrix of constraints.
+
+For history xhat_k, loss_k(theta) =
+  (b_k+F theta)^T xhat_k - min_{x in X}(b_k+F theta)^T x.
+The master minimizes mean(loss_k)/S + lambda*sum(theta)/10,
+where S=max(1,mean(abs(b_k^T xhat_k))).
+Each certified forward optimum adds an epigraph inequality
+  e_k >= b_k^T(xhat_k-x) + theta^T F^T(xhat_k-x).
+This is an exact separation formulation up to recorded tolerances and limits,
+not an application of continuous KKT to integer variables. Tiny coefficients
+omitted from cuts receive a box-valid lower correction.
+HiGHS solves LP/MILP, and DFJ subtour separation enforces complete TSP tours.
+Separation at all samples certifies the returned empirical objective within
+the stated tolerances. A limit failure is explicitly not such a certificate.
+
+Histories and evaluation
+Known costs are independently perturbed by Uniform(0.5,1.5). X is unchanged.
+Each seed has ten training contexts and ten disjoint test contexts.
+Noiseless history is a certified optimum. Noisy history minimizes a fixed
+random auxiliary cost subject to true cost <= true optimum +
+0.1*max(1,abs(true optimum)). This is a cost-gap cap, not 10% wrong people.
+Generating arbitrary bounded-gap choices is a stress distribution, not a
+realistic calibrated human error model. Under this distribution the empirical
+suboptimality objective need not minimize price-estimation error.
+Regret=max(0,true cost - optimum)/max(1,abs(optimum)), averaged over tests.
+Relative MAE=mean(abs(theta_hidden-truth))/mean(abs(truth_hidden)).
+One seed uses the same histories and tests for every method. K=5 is nested
+inside K=10. Seeds are repeated contexts, not independent benchmark sources.
+
+Methods
+zero, known-price median (1), midpoint (5), one seeded uniform random draw;
+These controls assign numbers to the two explicitly masked coordinates and
+zero to the three optional nuisance features. They use the controlled
+template's structural information; they are history-free, not prior-free.
+The template explicitly distinguishes missing original costs from a possible
+additional cost. This is a strong, structure-informed baseline comparison.
+An additional post-hoc constant control assigns1 to all three selected
+features, without that distinction. It uses all39 original source-seed test
+sets; specification is stress_control_addendum.json. It never overwrites or
+enters the primary nine-method schedule. Failures and resources are separate.
+text_l1, same candidates with no L1, all five candidates with L1;
+empirical-loss fit followed by closest-to-[1,1,0] prior center;
+50 cyclic projected subgradient steps with training-only iterate selection.
+L1 comparison changes only lambda. Candidate comparison changes only allowed
+coordinates. There is no tuning using test performance.
+
+Primary comparisons: K10, gap cap0.1, each collection separately.
+Average seeds within original source, then equal-weight sources. Report
+min/median/max and paired source bootstrap (5,000 draws). Intervals are
+exploratory, unadjusted, particularly weak for only two NETLIB sources.
+An incomplete method cohort has no complete-cohort mean. Successful-only
+means and nonnegative lower bounds are labeled; no missing outcome imputation.
+
+Mechanism diagnostics
+For primary predictions, minimize/maximize true cost over the estimated
+optimal face with absolute cost tolerance 1e-7. Store both actual plans and
+their L1 distances from the default. These are true-cost extremal witnesses,
+not maximum-distance witnesses. Diagnostics use the oracle and are not a
+deployable policy. A timeout gives no worst-case safety certificate.
+Profile each hidden parameter over near-minimum unregularized empirical
+loss +1e-6. These ranges are NOT confidence intervals and NOT the full set of
+parameters compatible with bounded noise. Narrow ranges excluding truth
+indicate that a wrong empirical objective can be confidently wrong.
+AFIRO mechanism checks are post-hoc explanatory analyses, retained at all
+three frozen seeds and both noise caps. Never filter the main cohort by them.
+Old MAMO source44 is explicitly historical and is never pooled with new scores.
+
+Independent checks
+NETLIB: interior-point without crossover; TSP: directed MTZ formulation;
+first three small knapsacks: exhaustive binary enumeration; first knapsack's
+inverse loss and profile: enumerate every feasible competitor in one LP.
+Same parser and (except enumeration) same HiGHS means partial independence.
+Larger knapsacks explicitly state not independently recomputed. All failures
+of the additional checks remain in independent-checks.json.
+
+Resources and preserved interruptions
+5 seconds per forward call, 90 seconds per inverse fit, 600-second worker
+watchdog; three concurrent workers, one solver thread each.
+v1 was interrupted after a Unicode-path adapter failure. Its original code,
+partial outcomes and interruption record are retained in interrupted-v1.
+v2 also lost the execution session for an unobserved reason. Completed jobs
+were retained byte-for-byte; unfinished checkpoints were archived separately,
+then those entire jobs rerun from identical frozen inputs. No outcome-driven
+replacement, limit relaxation or source substitution occurred.
+scripts/stress-resume.mjs records these events in interrupted-v2-attempt*.
+During recovery, an elevated background scheduler was invisible to ordinary
+process enumeration and a second scheduler was mistakenly started. Both
+were stopped after elevated process inspection. All resumed jobs, including
+completed ones, were archived in overlapping-resume-discarded and rerun from
+the original inputs. Only the original 13 completed jobs were retained.
+An exclusive resume.lock prevents another concurrent scheduler. Do not
+manually remove it without verifying process termination with adequate
+visibility. This is an execution error, not an algorithm/data failure.
+Checkpoint CPU for interrupted runs is a lower bound; uncheckpointed CPU and
+time between termination and discovery are unknown. Recorded active wall is
+also a lower bound. Do not call these comprehensive hardware cost estimates.
+Peak RSS is the largest worker peak, not whole-machine simultaneous usage.
+Paid API calls/cost are zero. Electricity is unmeasured.

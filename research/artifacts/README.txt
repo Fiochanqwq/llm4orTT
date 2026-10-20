@@ -13,3 +13,17 @@ ambiguity is preserved. No old diet score is replaced, and no real-human/free-te
 The ZIP includes frozen contexts, all raw runs, CSV, source admission failures, verification, scripts,
 public source data and its license, and paper/figures. See the adjacent SHA256 file manifest.
 All new computation was local; no paid API calls were made.
+
+Separate public benchmark stress test: public-stress-20261020-v2.zip
+Extract and open 压力测试报告.html, or read 实在结论.txt.
+NETLIB, OR-Library and TSPLIB95: 14 fixed candidates, 13 admitted sources,
+3 seeds, 9 methods, 1512 scheduled outcomes including108 source-blocked rows.
+All successes, method failures, diagnostic limits and process incidents are
+retained. Final comparisons and uncertainty are reported separately per library.
+AFIRO demonstrates zero decision regret with100% hidden-price relative MAE,
+including an unregularized/noiseless case. Good decision scores do not certify
+price recovery. Controlled structure templates and generated histories remain
+explicit limitations. The archive includes source attribution, license notices,
+independent formulations/enumeration, raw plans, resource ledgers and hashes.
+Interrupted and overlapping runs are archived separately, never pooled.
+Unknown wasted CPU is labeled unknown. No paid API calls were made.
