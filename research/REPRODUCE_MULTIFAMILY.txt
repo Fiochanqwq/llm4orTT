@@ -1,0 +1,74 @@
+LLM4ORTT 0.1: frozen cross-family extension, 2026-10-20
+
+QUICK RESULTS
+Download research/artifacts/multifamily-20261020-v1.zip, extract, open 跨题型报告.html.
+paper.html and paper.pdf contain the full exploratory English manuscript.
+All old diet/audit artifacts remain separately preserved; this extension does not replace their scores.
+
+DATA / LICENSE
+MAMO: https://github.com/FreedomIntelligence/Mamo
+Pinned commit: 2c91069dee5c1e4db4b899eb176ec987d0251bb3
+Source: data/optimization/Complex_LP/mamo_complex_lp.jsonl
+Huang, Shen, Hu, Gao, Wang; https://arxiv.org/abs/2405.13144
+Source and derived research data retain CC BY-SA 4.0. App code license unchanged.
+Logs and histories are controlled synthetic additions to public problems, not real user conversations.
+This extension makes zero paid API calls.
+
+DESIGN
+Audit all source IDs41-99 before inverse outcomes: 19relocation +40tour.
+Admit14 relocation and5 tours; source ID%5==0 gives3 development sources; remaining16 evaluation.
+95 source-seed jobs x2 history counts x2 noise caps x8methods =3040rows.
+Seeds11,23,37,53,71; K5/20; gapcap0/.1; 20test contexts per seed.
+Primary K20/.1; average5 seeds within source, then equal-weight sources, separate families.
+The protocol, source implementation and inputs were hashed before inverse outcomes.
+Source interpretation/answer checks constrain coverage: only5of40tour candidates admitted.
+No hyperparameters or test data were changed after outcomes.
+
+LOCAL REPRODUCTION
+1. npm ci
+2. npm run solver:prepare
+3. npm run test:multifamily
+   Five mathematical tests; no research dataset or API key required.
+4. node scripts/mamo-fetch.mjs
+   Retrieves the pinned public source files and checks existing files before writing.
+5. npm run experiment:multifamily -- --recompute
+   Creates a fresh timestamped directory, freezes contexts, runs all95 jobs with5workers,
+   checks recorded feasibility/arithmetic and hashes, and runs independent MTZ checks.
+   Old outputs are retained. On different platforms, solver optima/choices may differ;
+   compare frozen inputs, statuses, tolerances and face ranges, not just mean scores.
+   Without --recompute, the default folder is resumed and existing row files are reused.
+
+To check the exact published archive, extract its contents under:
+outputs/inverse/multifamily-20261020-v1/
+The repository's research/multifamily.py and multifamily_protocol.json must match freeze.json.
+Run using the solver Python selected by server/python-runtime.mjs:
+  python research/multifamily_analyze.py
+  python research/multifamily_crosscheck.py
+On the provided Windows workspace use runtime/python/python.exe -X utf8 instead of python.
+MULTIFAMILY_OUT may point to an alternate artifact directory.
+The verifier checks source-code hash, input hashes, every scheduled row, history feasibility/gap,
+test decision feasibility, arithmetic, and recorded envelope containment.
+It does not re-solve every stored row; use --recompute for that.
+The released replay-verification.json additionally records an exact fresh32-row replay of source44/seed71.
+
+FIGURES / PAPER
+Plotting and PDF authoring are separate from the solver environment.
+Use Python3.12 with numpy2.5.4, matplotlib3.10.8, reportlab and pypdf:
+  python research/multifamily_report.py
+  python research/multifamily_paper.py
+  npm run qa:multifamily
+Browser QA uses Chrome; set CHROME_PATH if needed.
+Mathematical run environment: Python3.13.16, numpy2.5.3, highspy1.15.1.
+Run freeze.json and publication-environment.json record exact versions.
+
+INTERPRETATION
+Eight methods include two non-learning controls, correct-support diagnostic, text-selected sparse IO,
+full-five-feature sparse IO, positive-floor IO, prior-center IO, and budgeted projected subgradient.
+The template is controlled and has true support present; this does not test real free-form text.
+Correct-support IO changes support AND regularization, so is not a clean L1 ablation.
+Full-bank has5features, not an unknown full matrix. Positive floor adds external domain knowledge.
+No faithful named-paper baseline reproduction, constraint F1, runtime or real-human study is claimed.
+Seed min/median/max and estimated-optimal-face best/worst answer different questions.
+All exploratory intervals cluster by source, have no multiplicity correction, and cannot justify broad
+inference from5tour sources. A low decision regret does not imply correct parameter recovery.
+See paper sections9-11 for positive findings, counterexamples, and unsupported claims.

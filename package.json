@@ -29,7 +29,10 @@
     "test:mamo": "node scripts/mamo-test.mjs",
     "qa:mamo": "node scripts/mamo-report-qa.mjs",
     "audit:mamo": "node scripts/mamo-audit.mjs",
-    "qa:mamo-audit": "node scripts/mamo-audit-qa.mjs"
+    "qa:mamo-audit": "node scripts/mamo-audit-qa.mjs",
+    "experiment:multifamily": "node scripts/multifamily-local.mjs",
+    "test:multifamily": "node scripts/multifamily-local.mjs --test",
+    "qa:multifamily": "node scripts/multifamily-qa.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "0.132.1",

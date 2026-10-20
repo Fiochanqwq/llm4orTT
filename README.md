@@ -41,7 +41,7 @@ GitHub Actions 对推送与 PR 执行构建、接口和真实求解器测试。�
 
 ## 数据与研究边界
 
-密钥、聊天、实验输出、模型文件、运行时与安装包不进入 Git；安装包通过 Releases 分发。启用大模型会把当前任务数据发送到所选接口。离线复算需单独归档的实验数据，见 [复现说明](research/REPRODUCE.txt)。
+密钥、聊天、未整理的实验输出、模型文件和运行时不进入 Git；安装包通过 Releases 分发。经过核验的公开研究证据包单独放在 `research/artifacts`，不含用户聊天或密钥。启用大模型会把当前任务数据发送到所选接口。离线复算需归档的实验数据，见 [复现说明](research/REPRODUCE.txt)。
 
 实现边界与实验协议见 [研究说明](docs/CONTEXTUAL_INVERSE.md)。当前内置评测是合成排班数据，不代表已完成 NLP4LP 全量评测。新方向代码位于 `server/inverse.mjs`、`solver/inverse.py` 和 `src/Inverse.tsx`。
 
@@ -56,3 +56,11 @@ GitHub Actions 对推送与 PR 执行构建、接口和真实求解器测试。�
 旧实验分数和测试集保持不变。审计发现：主比较中2号、39号题占本方法总损失的86.50%；零价格导致最优解不唯一，改变变量排列会改变决策遗憾；25/62个隐藏价格从未被训练历史激活。文本、稀疏以及相对固定报10的额外收益均未证实，不能将当前结果写成真实参数恢复或一般隐式约束发现的证明。
 
 `npm run audit:mamo` 从归档证据执行本地审计；`npm run audit:mamo -- --recompute` 在新的独立输出目录从零重算。两者都不调用付费模型。结果包含原始报告副本、全部方法对照、参数范围、最优解退化证书、逐题下载及结论处置账本；`npm run qa:mamo-audit` 检查报告。审计数学与证据核验在 `research/mamo_audit.py` 和 `research/mamo_audit_verify.py`，绘图在 `research/mamo_audit_report.py`。
+
+### 冻结跨题型扩展（2026-10-20）
+
+新增调运与闭环路线两类模型，审计 59 道候选题，准入 19 道；其中 16 道测试题、3 道开发题。5 次重复、8 种本地方法、2 个历史数量和 2 个噪声上限，共 3,040 条结果，新增付费调用为 0。
+
+路线题主条件平均遗憾从固定中点的 4.271% 降到文本候选稀疏逆优化的 0.764%，但仅有 5 道准入测试题。调运题的相对收益区间仍跨零，且估计最优方案之间有严重费用歧义；这些反例全部保留。受控文本不代表已验证真实日志理解，当前结果也不代表 CCF A 投稿已就绪。
+
+[完整证据包](research/artifacts/README.txt)包含逐题五次最好／中间／最差、所有对照、独立模型核验和论文草稿。[复现说明](research/REPRODUCE_MULTIFAMILY.txt)。`npm run test:multifamily` 运行无数据依赖的数学测试，`npm run experiment:multifamily -- --recompute` 在新目录重算全套实验，保留原档。普通聊天功能和软件版本 `0.1.0` 保持不变。

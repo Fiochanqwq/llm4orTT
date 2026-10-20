@@ -1,0 +1,9 @@
+{
+  "file": "multifamily-20261020-v1.zip",
+  "sha256": "6ee79cae9651b0b0fb4c617c71b7f41c2e706f478e4e7ca273ab0e087f73fc86",
+  "bytes": 4519992,
+  "archivedFiles": 234,
+  "credentialPatternScan": "passed; explicit public research file allowlist",
+  "sourceRevision": "2c91069dee5c1e4db4b899eb176ec987d0251bb3",
+  "manifestInside": "artifact-files.json"
+}
