@@ -1,5 +1,5 @@
 """Evidence-first Chinese report; all numerical claims derive from checked records."""
-import html,json,os,statistics as st,sys
+import html,json,os,statistics as st,sys,shutil
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1];OUT=Path(os.environ.get('STRESS_OUT',str(ROOT/'outputs/inverse/public-stress-20261020-v2')))
 os.environ.setdefault('MPLCONFIGDIR',str(ROOT/'work/research/mplconfig'));sys.path.insert(0,str(ROOT/'work/research/plot-deps'))
@@ -17,6 +17,8 @@ def num(v):return '—' if v is None else f'{v:.5g}'
 def table(head,rows):
  return '<div class="scroll"><table><thead><tr>'+''.join('<th>'+html.escape(str(x))+'</th>' for x in head)+'</tr></thead><tbody>'+''.join('<tr>'+''.join('<td>'+html.escape(str(x))+'</td>' for x in r)+'</tr>' for r in rows)+'</tbody></table></div>'
 def main():
+ source_manifest=ROOT/'datasets/stress-public-v1/download-manifest.json'
+ if source_manifest.exists():shutil.copy2(source_manifest,OUT/'download-manifest.json')
  a=read('analysis.json');cfg=read('protocol.json');audit=read('source-audit.json');v=read('verification.json');mech=read('mechanisms.json');cross=read('independent-checks.json');rows=read('all-results.json');control=read('additional-control.json')
  ss=[r for r in a['summaries'] if r['K']==10 and r['noise']==.1];res=a['resources'];methods=cfg['methods']
  sources=sum(r['status']=='admitted' for r in audit);status=a['statusCounts'];diagnostic=len(a['diagnosticFailures'])
@@ -114,6 +116,10 @@ def main():
  audit_table=table(['数据集','题','状态','原题最优值','公开值','原因'],[[r['family'],r['id'],r['status'],r.get('originalObjective','—'),r.get('publishedOptimum','—'),r.get('error','一致')] for r in audit])
  resources=f'''记录到的有效主运行墙钟至少 {res['wallSeconds']/60:.2f} 分钟；最终完成工作进程 CPU 合计 {res['completedWorkerCPUSeconds']/60:.2f} 分钟，全部尝试的 CPU 记录完整：{res['CPUCompleteness']}。首次 v2 中断的检查点另记录 CPU 至少 {res['interruptedCheckpointCPUSeconds']/60:.2f} 分钟；重复调度和未写入检查点的消耗不明，不能用此表声称总成本。正式调度 3 个并行工作进程，单个进程最大峰值内存 {res['peakWorkerRSSBytes']/1024**2:.1f} MiB。最终任务前向调用 {res['forwardCalls']:,} 次，求解器累计运行 {res['solverSeconds']/60:.2f} 分钟。独立核验另外用墙钟 {cross['wallSeconds']:.2f} 秒、CPU {cross['cpuSeconds']:.2f} 秒；机制检查另外用墙钟 {mech['wallSeconds']:.2f} 秒、CPU {mech['cpuSeconds']:.2f} 秒。累计 CPU 可以大于墙钟时间，二者不能相加。峰值内存不是整台机器同时占用的总内存。付费 API 调用 0，API 费用 0 元；电量未测。'''
  resources+=f' 最终运行中未正常收尾的工作进程，已保存行的 CPU 另外至少 {res["unfinishedWorkerCheckpointCPUSeconds"]/60:.2f} 分钟。'
+ incident_note='本次运行未记录重复调度事故；原发布版本的事故和修复经过见原证据包。'
+ if res.get('overlappingResumeIncident'):
+  incident_note='首次 v1 因中文绝对路径读取问题中止，92 条部分记录和修复前代码保存在 interrupted-v1，不与正式 v2 混算。随后执行会话中断；恢复时普通权限未看到后台进程，误启动了第二个调度器。发现后停止两者，把全部受影响任务放入 overlapping-resume-discarded，从原冻结输入重新计算；最早已完成的 13 个任务原样保留。现已加独占锁。这些是实现与调度失误，不是基准题或算法失败。中断和重复运行的全部 CPU 无法补算，不能假装成零。'
+ correction_note='<p>旧恢复记录曾错误标注“进程全部消失”，原记录仍保留；事实更正见 <a href="incident-corrections.json">执行事故更正单</a>。快照目录数量不能当成真实故障次数。</p>' if (OUT/'incident-corrections.json').exists() else ''
  sections=f'''<header><small>LLM4ORTT 0.1 · 多公开基准压力测试 · 2026-10-20</small><h1>分数好，不代表账算对</h1><p>三个基准库；14 道预列候选，{sources} 道可用；3 次重复、9 种方法、2 个历史数量、2 个噪声上限。共登记 {a['schedule']:,} 条排程，失败与未执行都在账上。</p></header>
 <nav><a href="#verdict">实在结论</a><a href="#scores">全部对照</a><a href="#case">逐题查账</a><a href="#mechanism">毛病根子</a><a href="#failures">翻车与消耗</a><a href="all-results.csv">完整 CSV</a></nav>
 <section id="verdict"><h2>这一轮到底说明了什么</h2>{''.join('<p>'+html.escape(c)+'</p>' for c in conclusions)}
@@ -142,8 +148,7 @@ def main():
 <section id="failures"><h2>翻车、报错、限时，一条不少</h2><p>排程状态：{html.escape(str(status))}。工作进程状态：{html.escape(str(a['executionStatusCounts']))}。最优面共预列 {a['faceChecksScheduled']} 次方向检查：{html.escape(str(a['faceCheckStatusCounts']))}。blocked_source 是同一份来源不可用产生的未执行记录，不能说成这些方法各自求解失败。主预测失败和额外最坏方案诊断失败也分开计数。</p>
 <details><summary>全部主运行失败或未执行记录（{len(a['failures'])} 条）</summary>{failure_table}</details>
 <details><summary>全部最优面诊断失败／无界（{diagnostic} 条）</summary>{df}</details>
-<p>{resources}</p><p>首次 v1 因中文绝对路径读取问题中止，92 条部分记录和修复前代码保存在 interrupted-v1，不与正式 v2 混算。随后执行会话中断；恢复时普通权限未看到后台进程，误启动了第二个调度器。发现后停止两者，把全部受影响任务放入 overlapping-resume-discarded，从原冻结输入重新计算；最早已完成的 13 个任务原样保留。现已加独占锁。这些是实现与调度失误，不是基准题或算法失败。中断和重复运行的全部 CPU 无法补算，不能假装成零。下载失败与重试见 <a href="download-manifest.json">下载账</a>。</p>
-<p>旧恢复记录曾错误标注“进程全部消失”，原记录仍保留；事实更正见 <a href="incident-corrections.json">执行事故更正单</a>。快照目录数量不能当成真实故障次数。</p>
+<p>{resources}</p><p>{incident_note} 下载失败与重试见 <a href="download-manifest.json">下载账</a>。</p>{correction_note}
 <p>单次前向求解限时 5 秒，逆拟合限时 90 秒，工作进程看门狗 600 秒。超时体现“这个预算内没完成”，不等于数学上无解。没有通过放宽限时替换旧失败结果。</p></section>
 <section><h2>来源、成熟算法和可复核材料</h2>{audit_table}
 <p>连续模型使用 HiGHS；背包用 0/1 混合整数规划；路线用度约束和 DFJ 子回路割；逆问题用次优性残差与割平面。还加入一个固定 50 步的投影次梯度，不冒充某篇论文的完整复现。参考 <a href="https://pubsonline.informs.org/doi/10.1287/opre.2.4.393">Dantzig–Fulkerson–Johnson（1954）</a>、<a href="https://epubs.siam.org/doi/10.1137/0108053">Kelley（1960）</a>、<a href="https://arxiv.org/abs/1512.05489">非完美信息逆优化</a>、<a href="https://arxiv.org/abs/2109.03920">逆优化综述</a>。</p>

@@ -1,7 +1,7 @@
 {
   "file": "public-stress-20261020-v2.zip",
-  "sha256": "f735e133510ec7dc863bd3c886c2459b2153a389ca22d9e6768af5f6b910bda1",
-  "bytes": 8748313,
+  "sha256": "080900d4a9e40c98c34d464da95ce8afc2b75e591bebfdd7677176f865ddd1da",
+  "bytes": 8748490,
   "archivedFiles": 260,
   "credentialPatternScan": "passed; only public research evidence allowlist",
   "manifestInside": "artifact-files.json"
