@@ -1,0 +1,44 @@
+{
+  "schema": "finite-certificate-development-protocol.v1",
+  "registered_before_run": true,
+  "date": "2026-10-20",
+  "purpose": "Mechanism and engineering checks only; not a confirmatory conference benchmark",
+  "direction": "Language candidate costs plus inverse optimization, with independent bounded-noise decision checks",
+  "independent_instances": 12,
+  "families": ["six_choice_menu", "binary_knapsack"],
+  "seeds_per_family": [101, 211, 307, 401, 503, 601],
+  "conditions": ["noiseless", "absolute_gap_0.4"],
+  "historical_contexts": 5,
+  "deployment_contexts": 1,
+  "parameter_dimension": 2,
+  "parameter_box": [0, 2],
+  "point_estimator": "existing inverse.recover, lambda=0, no pruning",
+  "certificate_threshold_absolute": 0.25,
+  "certificate_max_seconds": 20,
+  "certificate_max_oracle_calls": 200,
+  "max_assignments": 4096,
+  "feedback": "Uniform selection among all feasible actions whose true absolute cost gap is within the declared bound; known simulated bound supplied, hidden truth not supplied to certificate",
+  "primary_checks": [
+    "Every safe certificate has true deployment regret <= threshold",
+    "An independent 2D exact-rational polygon oracle lies within returned risk bounds",
+    "A correct noise bound does not produce incompatible status",
+    "All returned coordinate outer bounds contain the simulated true coordinates"
+  ],
+  "reported_metrics": [
+    "all planned and completed tasks",
+    "safe, risk_witness, unresolved, incompatible counts",
+    "wrong releases and oracle-bound violations",
+    "old empirical profile containment, explicitly not confidence coverage",
+    "true decision regret and conditional worst-case regret",
+    "solver calls and elapsed time"
+  ],
+  "failure_policy": "Keep every failure and original output. Any invalid upper/lower certificate blocks success. Do not select seeds or relax budgets after results.",
+  "limitations": [
+    "The two noise conditions share an instance; not independent samples",
+    "These generators are development data and cannot become final held-out evidence",
+    "Candidate structure is supplied, no LLM understanding claim",
+    "No proof of novelty or CCF A readiness",
+    "Only finite small decision sets; relative noise and general continuous deployment unsupported",
+    "Time is cooperative, including exact arithmetic overhead; report actual elapsed time"
+  ]
+}

@@ -1,4 +1,4 @@
-llm4orTT 0.1.0 · Third-party notices
+llm4orTT 0.1.2 · Third-party notices
 Generated from installed package versions. App code and original Saturn artwork are project-authored.
 System Calibri and SimHei font files are not redistributed.
 

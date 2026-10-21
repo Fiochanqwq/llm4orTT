@@ -15,7 +15,7 @@ try {
   const errors = []; page.on('pageerror', e => errors.push(e.message));
   await page.goto(service.origin + '/#token=' + service.token);
   await expect(page).toHaveTitle('llm4orTT');
-  await expect(page.locator('.app-brand small')).toHaveText('v0.1');
+  await expect(page.locator('.app-brand small')).toHaveText('v0.1.2');
   await page.getByRole('tab', { name: '逆优化工作台' }).click();
   await expect(page.getByRole('heading', { name: '从经验中，还原规则' })).toBeVisible();
   await expect(page.getByLabel('运营日志 · 一行一条')).toContainText('夜班');

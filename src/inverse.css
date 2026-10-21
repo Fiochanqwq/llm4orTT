@@ -6,3 +6,9 @@
 @media(max-width:1150px){.inverse-columns{grid-template-columns:1fr}.inverse-steps{gap:10px}.inverse-steps small{max-width:140px;line-height:1.6}.inverse-tag{display:none}}
 @media(max-width:650px){.inverse-workspace{padding:24px 18px}.inverse-heading h1{font-size:27px}.inverse-steps{flex-direction:column;align-items:flex-start}.inverse-steps>svg{display:none}.inverse-steps small{max-width:none}.inverse-card{padding:18px}.inverse-card-title{flex-wrap:wrap}.inverse-metrics strong{font-size:24px}.inverse-hypothesis>div{flex-wrap:wrap}}
 .inverse-text{width:100%;resize:vertical;min-height:85px;margin-bottom:18px;border:1px solid var(--line);border-radius:7px;background:var(--bg);color:var(--text);padding:12px;font-family:inherit;font-size:13px;line-height:1.8}.inverse-logs{min-height:155px}.inverse-data{padding:12px 0;border-block:1px solid var(--line)}.inverse-data>summary{margin-bottom:12px}.inverse-hypothesis code{overflow-wrap:anywhere;line-height:1.8}
+
+.inverse-certification-input{margin:16px 0}
+.inverse-certification-input input{display:block;width:100%;box-sizing:border-box;margin-top:7px;padding:9px 10px;border:1px solid #c8cdd5;border-radius:8px;color:inherit;background:transparent;font:inherit}
+.inverse-certificate h3{font-size:15px;line-height:1.6;margin:16px 0 8px}
+.inverse-certificate-decision{border-top:1px solid #dce0e6;margin-top:14px}
+.inverse-certificate pre{overflow:auto;max-height:240px;white-space:pre-wrap}

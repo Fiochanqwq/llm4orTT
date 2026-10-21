@@ -1,0 +1,313 @@
+比较实验与贡献边界：原文核验记录
+核验日期：2026-10-20（Asia/Shanghai）
+项目：llm4orTT 0.1.1 后续研究
+状态：实验定位和证据审查；本文不填入尚未运行的实验结果。
+
+一、可以据实确定的目标
+
+大方向保持为：自然语言给出候选成本结构，历史行为限制未知成本，
+优化器提出方案，再判断该方案能否在仍可能的成本下控制决策损失。
+本轮先检验一个较窄的问题：
+在相同有限动作模型、历史、误差预算、待检查方案和损失阈值下，
+不同计算顺序与约束复用方式，能否用较少计算更早给出可靠结论？
+
+目标结论是 safe、risk_witness 或 unresolved；模型不相容另行报告。
+它属于固定方案的最大后悔检查，不等于寻找最小最大后悔方案。
+它也不是“恢复真实参数”、共形覆盖率保证或语言理解能力的实验。
+AAAI 正式长文仍是研究目标；目前没有证据表明本研究已达到投稿成熟度。
+
+二、已经核对的近邻方法
+
+[1] Craig Boutilier, Relu Patrascu, Pascal Poupart, Dale Schuurmans.
+Constraint-based Optimization and Utility Elicitation using the Minimax
+Decision Criterion. Artificial Intelligence, 2006.
+DOI: 10.1016/j.artint.2006.02.003
+作者保存的全文：
+https://webdocs.cs.ualberta.ca/~daes/papers/aij06.pdf
+证据层级：读到全文，重点核对 §3、§4.2.2、§4.4。
+已有内容：最坏后悔；寻找对抗方案；逐次加入约束；提前终止时保留
+上下界；复用先前查询生成的约束；一般线性效用参数集合。
+因此，约束生成、随时上下界和约束复用本身均不能列为本项目首创。
+原文做的是效用最大化；本项目用成本最小化，符号须相应翻转。
+原文的方案选择循环比本轮固定方案检查更完整，不能给本轮代码贴上
+“完整复现 Boutilier 方法”的标签。
+
+[2] Merve Bodur, Timothy C. Y. Chan, Ian Yihang Zhu.
+Inverse Mixed Integer Optimization: Polyhedral Insights and Trust Region
+Methods. INFORMS Journal on Computing 34(3):1471–1488, 2022.
+DOI: 10.1287/ijoc.2021.1138
+出版社元数据：
+https://pubsonline.informs.org/doi/10.1287/ijoc.2021.1138
+作者预印本全文：
+https://optimization-online.org/wp-content/uploads/2020/07/7944.pdf
+稳定预印本标识：https://arxiv.org/abs/2008.00301
+证据层级：核对出版社书目信息、作者预印本 §3 Algorithm 1 和 §5。
+已有内容：逆混合整数最优性的多面体描述、主问题与切平面、信赖域，
+以及多条观测的扩展。有限动作枚举和多个历史不等式不是新的逆 MILP 理论。
+本轮若未实现其信赖域、主问题目标和扩展细节，只能称经典分离思想的
+有限动作适配，不能宣称复现该论文完整算法或胜过其论文结果。
+
+[3] Bo Lin, Erick Delage, Timothy C. Y. Chan.
+Conformal Inverse Optimization. NeurIPS 2024, main conference.
+会议元数据：
+https://proceedings.neurips.cc/paper_files/paper/2024/hash/7423902b5534e2b267438c85444a54b1-Abstract-Conference.html
+会议全文：
+https://proceedings.neurips.cc/paper_files/paper/2024/file/7423902b5534e2b267438c85444a54b1-Paper-Conference.pdf
+证据层级：全文 §3.1、§3.3、§4 和 §5。
+已有内容：用行为学习参数不确定集合，分训练和校准数据，再生成稳健决策。
+其式 (8) 最小化集合内的最坏绝对成本；本项目检查固定方案的最坏后悔，
+目标不同。其 Theorem 2 覆盖的是“新观测对应的逆最优参数集合与校准集合
+相交”，不是“全体历史共享的唯一真实成本必在本项目多面体内”。
+其 i.i.d. 数据、单位球参数和感知参数设定须保留，不能把已知确定性
+误差预算直接换成其统计保证。完整比较需单独实现校准和稳健决策流程。
+
+[4] Peyman Mohajerin Esfahani, Soroosh Shafieezadeh-Abadeh,
+Grani A. Hanasusanto, Daniel Kuhn.
+Data-driven Inverse Optimization with Imperfect Information.
+Mathematical Programming 167:191–234, 2018；2017-12-07 在线发表。
+DOI: 10.1007/s10107-017-1216-6
+出版社：
+https://link.springer.com/article/10.1007/s10107-017-1216-6
+作者预印本全文：
+https://optimization-online.org/wp-content/uploads/2015/12/5244.pdf
+证据层级：出版社元数据及摘要、预印本 §3 Definition 3.1 和 §4。
+已有内容：不完美信息、次优行为和分布鲁棒逆优化。
+其有界理性损失为 max{观测成本减最优成本减 δ, 0}。
+本项目取该损失在每条观测均为零的参数集合，是已知模型条件的直接使用；
+确定性相容集合不能冒充 Wasserstein 分布鲁棒或样本外统计保证。
+
+[5] Omar Besbes, Yuri Fonseca, Ilan Lobel.
+Contextual Inverse Optimization: Offline and Online Learning.
+Operations Research 73(1):424–443，2025 卷期；2023-08-02 在线发表。
+DOI: 10.1287/opre.2021.0369
+出版社：
+https://pubsonline.informs.org/doi/10.1287/opre.2021.0369
+预印本标识：https://arxiv.org/abs/2106.14015
+证据层级：出版社摘要及书目信息；本轮全文获取失败。
+摘要明确已有从最优动作反馈学习、离线最小最大策略和在线后悔分析。
+因此“看行为而不观察真实成本”“不同场景下作新决定”不能单独当成新贡献。
+本轮没有核对其所有算法细节，不据此声称已实现或已超过该方法。
+
+[6] Harshit Kothari, James R. Luedtke.
+Accelerating Benders decomposition for solving a sequence of sample
+average approximation replications. Mathematical Programming Computation,
+2026-05-23 在线发表。
+DOI: 10.1007/s12532-026-00324-3
+出版社开放全文：
+https://link.springer.com/article/10.1007/s12532-026-00324-3
+证据层级：出版社全文 §1、§2、§3.1。
+已有内容：保存对偶解池，在后续相近问题中先检查池内解是否能生成有效割，
+从而避免再次求解子问题。作者也明确指向更早单实例的对偶解复用。
+这与本项目“更换风险方向后，用参数框补偿对偶残差”不是完全相同的问题，
+但证明“缓存对偶解来减少求解”本身已有明确先例。不得据此声称同算法，
+也不得声称首次进行对偶证书复用。该文方法本轮没有复现。
+
+三、与现有程序严格对应的数学任务
+
+成本为 c_theta(x)=b(x)+f(x)^T theta，theta 位于事先给定的有界框 B。
+每条历史 k 的观测为 xhat_k，可行动作为 X_k，误差上限为 delta_k。
+
+U = {theta in B:
+     [f(xhat_k)-f(y)]^T theta
+       <= delta_k-b(xhat_k)+b(y), for all k and y in X_k}.
+
+固定部署方案 x0 和新场景动作集 X_new，令：
+d_y = b(x0)-b(y)
+q_y = f(x0)-f(y)
+R(x0;U) = max_{y in X_new} {d_y + max_{theta in U} q_y^T theta}.
+
+这是最大后悔的有限动作分解。给定非空 U 后，safe 需要 R<=tau；
+risk_witness 只需找到 theta in U 和 y in X_new 使损失>tau。
+在条件不满足或预算用尽时，应保留 unresolved，不能倒推 safe。
+上述模型与原理来自已知最坏后悔与逆优化条件；不是本文提出的新定理。
+
+四、这轮应该实现的公平基线
+
+A. Full-history LP（full_priority，强直接基线）
+一次构建全部历史不等式和参数框。在同一个 U 上，逐个求解 q_y 的
+线性支撑函数。给它和候选方法同样的竞争方案优先级、阈值提前终止、
+见证检查和全局复用；不能为了让候选方法好看而强迫它检查所有方案后
+才报告已经找到的风险。对任意已找到的相容 theta，都计算所有 y 的
+损失，这可以在不额外求 LP 的情况下找到风险见证。
+如果程序实际只实现静态优先级，则必须在实验报告明确说明；
+不能称为所有可能 Full-history 排序的最优实现。
+
+B. Shared-cut sequential（lazy_sequential，经典分离适配基线）
+从 B 或同一个初始有效约束集开始。对固定 y 求当前外集合的支撑函数，
+检查候选 theta 的全部历史。若存在违反项，加入真实历史约束再求解；
+若相容，才允许该 theta 贡献风险下界。跨 y 共享已加入的有效约束。
+竞争方案使用固定可重现顺序。它是一种分离算法适配，不是原论文整套
+最小最大后悔决策算法，也不含 Bodur 的信赖域机制。
+
+C. Static-priority shared cuts（lazy_priority，排序消融）
+与 B 相同，但使用事先冻结的初始上界或另一个明确静态分数排序。
+除排序外应尽量与候选算法相同。若还改变见证复用，结果就是两项机制
+的联合差异，不能仅归因于排序。对应代码和协议须说明每项机制开关。
+
+D. Adaptive unresolved upper bound（witness_priority，自适应排序消融）
+每次从尚未排除的竞争方案中选择当前有效上界最高者，收紧其界；
+历史切平面共享，已核验见证用于所有竞争方案。上界已不超过 tau 的
+竞争方案可跳过；所有竞争方案上界均不超过 tau 且 U 已证非空时放行。
+若候选策略只更换检查顺序，它是启发式调度改动。未经新增理论或稳定
+计算优势证据，不应称为新的逆优化框架。
+
+E. Shared dual upper bounds（dual_reuse，最终待检验候选策略）
+保留 D 的策略，并把某次 LP 提出的非负乘子复用于所有风险方向。
+设历史有效约束为 A theta<=h，参数框为 B。对任何 lambda>=0，定义：
+  G(q,lambda) = lambda^T h + support_B(q-A^T lambda).
+对所有 theta in U，逐项相加可得：
+  q^T theta
+  = lambda^T A theta + (q-A^T lambda)^T theta
+  <= lambda^T h + support_B(q-A^T lambda).
+所以 d_j+G(q_j,lambda) 是竞争方案 j 的有效风险上界。
+这里不要求 lambda 对新方向 q_j 对偶最优，也不要求 A^T lambda=q_j，
+因为剩余部分在有界参数框内精确补偿。这只是经典弱对偶与支撑函数的
+直接推论，不能称作新的对偶定理。原约束仍有效时，后来添加新约束不会
+破坏旧证明；保存旧 A、h 的加权和即可继续核对。
+
+certificate_methods.py 的具体实现每次获得新乘子后立即更新全部 j，
+保存每个竞争方案至今最小的有效上界；它不是跨数据集预训练的对偶池。
+乘子被截为非负、按有理数保存，可直接检查；LP 数值最优性不是有效性
+前提。非空性仍必须用经过全部历史检查的参数见证证明。
+与 D 的比较用于隔离这项复用机制；与 A 的主比较考察整套实现。
+基于 [6] 和弱对偶，当前只能称为一个待评估的具体适配，不能作首创断言。
+
+这里的 A、B、C、D、E 是同一个确定性保证问题上的适配比较。它们不是
+Conformal IO、分布鲁棒 IO 或 Contextual IO 的完整复现成绩。
+对相关论文的引用说明方法来源，不替代真实实现与实验。
+
+若将来声称复现经典最小最大后悔约束生成，还必须实现外层选择：
+  min_{x in X_new,t} t
+  subject to t >= c_theta(x)-c_theta(y), for each stored pair (theta,y).
+然后对当前 x 求完整最大后悔，生成新的对抗参数和方案并更新界。
+本轮固定 x0 的检查不包含这个外层选择，不能混淆。
+
+五、计算预算要算全
+
+所有方法必须看到相同历史、参数框、delta、阈值和 x0，使用同一数值
+后端、核验规则和动作枚举。真实 theta 只能由独立评价器读取，不能
+用来挑选 x0、竞争方案顺序、停止条件或“有利”的阈值。
+
+相同 LP 调用次数不代表相同计算成本。Full-history 的单次 LP 可能
+包含更多行；分离法还有历史扫描、构造切平面和有理数核验成本。
+必须同时报告 LP 次数、历史分离次数、总约束行数、预处理与总耗时。
+若所有可行动作已提前枚举，必须说明枚举成本是否包括在计时内。
+若所谓 maxOracleCalls 实际只计历史分离，则不能在图中改名为总求解次数。
+
+在精确求解同一 q_y 时，U 是外近似集合的子集，所以直接 LP 的最优
+上界不会高于该外近似的最优上界。这是集合包含关系，而非实测性能预测。
+因此，仅减少 LP 次数的实验尤其需要这个强直接基线；候选方法若获益，
+应说明来自更少约束、阈值停止、排序、缓存还是其他实际机制。
+存在对候选方法不利的实例是正常现象，必须保留。
+
+六、贡献能写到哪里，怎样判断不成立
+
+目前已核验的经典文献足以否定以下宽泛新颖性说法：
+“首次用相容参数集合检查决策”“首次用最坏后悔防止坏方案”
+“首次给逆整数优化加切平面”“首次复用约束实现随时检查”。
+
+可以检验但不能预先宣布成功的假设是：
+在本项目明确限定的有限动作、已知绝对误差预算下，某种调度与缓存
+组合能否在独立实例上提高给定预算的可判定比例，同时保持证据正确。
+若只胜过较弱顺序而不胜过 Full-history LP，结论应限于“改善该顺序”。
+若去掉缓存或排序后没有区别，该机制贡献不成立。
+若新方法与强基线相同或更差，应保留负结果并停止“已证明算法优越”的
+说法，不允许换种子、丢弃困难样本或换分母重新包装。
+即使有稳定优势，是否足够支撑顶会贡献仍需近邻查重、规模与外部验证。
+
+需要的检验至少包括：
+1. 独立精确核验：每个 safe 的界、每个 risk_witness 的相容性，
+   与独立小维枚举或顶点算法对照；故障数必须如实报告。
+2. 阈值边界、空集合、低预算、退化多面体、相关特征、冗余历史，
+   以及早期出现风险和迟迟不能排除风险的实例。
+3. 同一底层实例上成对比较各方法；相同实例的多个预算和噪声条件
+   不是相互独立样本，不得把它们充作更多独立实验单位。
+4. 输出获证率、风险见证率、未决率、错误放行、真实损失和计算成本，
+   防止一个永远说“未决”的算法在安全指标上虚假领先。
+5. 在查看保留测试结果前冻结实现和分析规则；所有失败、超时及变更记录
+   留存。若查看后调整，再生成新的独立批次；旧批次仍作为开发结果保留。
+6. 真正的语言与外部任务实验另做；手工给定的特征不能标为 LLM 发现，
+   合成任务的结论不能标为真实部署结论。
+
+七、此次检索的范围、失败与排除项
+
+使用 sci-literature-research 工作流；本记录属于针对性原文核验，
+不是穷尽性系统综述，也不证明不存在其他更近的研究。
+
+检索：
+— Organon DOI lookup:
+  10.1016/j.artint.2006.02.003；10.1287/ijoc.2021.1138。
+  两者均由 OpenAlex 返回匹配元数据。
+— Organon search_papers:
+  query="Conformal Inverse Optimization", source="all", max_results=5。
+  PubMed、arXiv、OpenAlex 成功；Semantic Scholar 返回 HTTP 429。
+  检索服务的 arXiv 与 PubMed 结果大量不相关，均未当成支持证据。
+— 网页检索：
+  "Bodur" "Inverse Mixed Integer Optimization" arxiv；
+  "Data-driven Inverse Optimization with Imperfect Information" arxiv；
+  "Contextual Inverse Optimization: Offline and Online Learning" arxiv。
+— 直接读取上面列出的作者、出版社和会议页面/全文。
+— Contextual IO 的 arXiv PDF 和尝试的 HTML 地址返回错误，
+  因此对该论文明确只使用出版社摘要与元数据。
+
+同名预印本与期刊版本合并成同一个工作条目，保留版本差异。
+本轮不拿搜索摘要的引用数作为论文质量证据，不虚构代码仓库。
+本轮没有执行这些论文的官方代码，所以没有“原论文复现成功”的结论。
+
+第五方法确定后新增的检索：
+— "dual multipliers" "reuse" "linear programming"；
+  "dual information" "reuse" "Benders"；
+  "constraint generation" "reusing" "dual" "regret"；
+  "dual solution pool" "Benders"。
+— 找到并核对了 [6] 出版社开放全文。其搜索结果中的 Optimization Online
+  PDF 链接直接获取返回 404，未把该链接当作已成功读取的全文。
+— Stanford Convex Optimization 书籍 PDF 直接获取失败；官方课件与
+  课程页面可检索到弱对偶内容。上面的界给出完整代数推导，不依赖该 PDF
+  是否可访问。此次针对性检索不排除更早或更直接的目标方向复用方法。
+
+八、冻结实现的只读公平性审查补充
+
+核对文件：research/certificate_methods.py、comparison_protocol.json、
+comparison_cases.py、run_comparison.py；审查没有改动这些文件。
+最终方法为 full_priority、lazy_sequential、lazy_priority、
+witness_priority、dual_reuse，共五组。所有组都执行相同的全局见证复用；
+名称 witness_priority 不表示其他方法没有见证复用。
+
+当前协议主比较为 dual_reuse 对 full_priority，8 次 LP、协作式 2 秒
+双预算。三类固定生成器，每类20个新种子，共60个 family-seed 实例；
+每个实例两种噪声条件在分析中合并，不能计成120个独立统计单位。
+这是一项固定资源的估计研究，不是已达到指定统计功效的确认性试验。
+
+实现中的有利点：相同输入、阈值、数值后端、相容性核对、全局见证复用；
+共享前处理单独计时；方法内初始化、装载全部约束、对偶复用均计时；
+方法顺序按冻结种子打乱。初步只读审查未发现上述对偶复用式子的有效性
+漏洞；这不替代逐项独立证书核验和实际故障测试。
+
+最强的对照限制：full_priority 使用静态初始框上界排序且没有全局
+对偶复用，也没有复用 LP 基。它是明确而实用的直接基线，但不是所有
+成熟直接求解优化的最强组合。若 E 胜过 A，只能写成胜过该冻结实现；
+要把收益单独归因于对偶复用，必须同时看 E 对 D；要声称强于完整直接
+方法族，将来还需独立批次加入 full-row + adaptive + dual-reuse 或
+合理 LP 热启动对照。本批次不能看过结果后改换主基线。
+
+额外边界：每次 LP 都新建求解器；所有方法均如此。2 秒预算为协作式，
+一个完整有理数扫描或序列化可以越过截止，报告实际耗时而非硬实时保证。
+双预算同时生效意味着主差异是本协议组合预算下的差异，不能单独解释成
+“只由 LP 次数决定的普遍计算优势”。有限动作和二维参数实验也不能外推
+为大规模混合整数问题的速度结论。
+
+额外核验：arXiv:2609.00065 的确存在。
+标题为 Scientific Agent Skills: A Library of Procedural Knowledge for
+Research Agents；作者 Timothy Kassis, Vinayak Agarwal, Yuhuan He,
+Darshil Patel, Aubrey M. Brueckner；2026 年预印本。
+https://arxiv.org/abs/2609.00065
+证据层级：arXiv 元数据与摘要。它讨论科研代理技能库，摘要明确没有
+任务级评价；与本轮逆优化算法比较不直接相关，不作为新贡献或算法有效性
+依据，也不把安装了科研技能当成科学结论经过同行评审。
+
+给读者的大白话：
+我们像是在检查一张购物清单。老方法已经知道：把所有还可能成立的
+价目表都考虑进去，看这张清单最多会多花多少钱。现在真正值得比赛的
+地方，是在同样可靠的前提下，谁能更省计算、更快找出问题或完成检查。
+比赛必须让对手也用上该有的工具。赢了才记赢，输了也保存记录。
+这能帮我们找到值得继续研究的东西，但不能提前写成已经发现了顶会成果。

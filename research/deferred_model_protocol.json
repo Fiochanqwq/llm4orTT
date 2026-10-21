@@ -1,0 +1,48 @@
+{
+  "schema": "deferred-language-model-evaluation.v1",
+  "status": "pending_models_and_independent_language_tasks",
+  "executedModelCalls": 0,
+  "metrics": null,
+  "trials": [],
+  "mainline": "Natural-language proposed cost structure -> historical behavior inverse fitting -> fixed-decision risk auditing",
+  "comparisonArms": [
+    {
+      "id": "language_structure_only",
+      "purpose": "Candidate features/constraints from the same natural-language task, with no behavioral repair",
+      "status": "not_run"
+    },
+    {
+      "id": "language_structure_plus_inverse_fit",
+      "purpose": "Same initial proposal with historical parameter fitting",
+      "status": "not_run"
+    },
+    {
+      "id": "language_structure_inverse_fit_and_sensitivity",
+      "purpose": "Same proposal and fitted candidate, adding declared-noise risk sensitivity",
+      "status": "not_run"
+    },
+    {
+      "id": "tacit_style_repair",
+      "purpose": "Potential separate comparison in tasks that actually contain rejected-solution/expert-correction pairs",
+      "status": "not_implemented_or_run",
+      "restriction": "Do not label a generic prompt as an exact TACIT reproduction. Its richer supervision must be matched or evaluated separately.",
+      "reference": "https://arxiv.org/abs/2609.38434"
+    }
+  ],
+  "requiredBeforeExecution": [
+    "Freeze model versions, full prompts, decoding settings, task split and per-task call/token budgets before collecting results",
+    "Use fresh held-out language tasks, separate structure generation from truth/answer access",
+    "Record every original response, parse failure, infeasible proposal, timeout and repair",
+    "Evaluate model structure/feasibility equivalence separately from objective-value agreement",
+    "Record the evidence for the declared behavior-noise cap; never infer guaranteed coverage solely from training fit",
+    "Hold candidate decision and numeric assumptions fixed when comparing certificate mechanisms",
+    "Include decision regret, bad releases, abstention rate, resource cost and human-supervision availability",
+    "Do not mix manually supplied numeric features with genuine model-discovered features"
+  ],
+  "notEstablished": [
+    "No model is presently best",
+    "No real-language accuracy or generalization has been measured",
+    "No external benchmark score has been produced",
+    "No paper method has been reproduced merely by citing it"
+  ]
+}

@@ -1,4 +1,4 @@
-"""Local-only validation and certified empirical identification ranges.
+"""Local validation, empirical fit ranges and separate bounded-noise checks.
 
 No language model, network client, held-out truth or benchmark labels are used.
 Ranges describe the empirical loss sublevel set, not statistical confidence.
@@ -13,6 +13,7 @@ from pathlib import Path
 import pyomo.environ as pyo
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from inverse import canonical, cost, dot, fit, forward, optimize, recover, validate
+from inverse_sensitivity import analyze_with_sensitivity as analyze_compatibility
 
 
 def loss(sample, theta, seconds):
@@ -42,7 +43,7 @@ def profile_bound(data, samples, target, allowed_loss, maximize=False):
     m.budget = pyo.Constraint(expr=sum(m.e.values()) / len(samples) <= allowed_loss)
     m.obj = pyo.Objective(expr=m.theta[target], sense=pyo.maximize if maximize else pyo.minimize)
     tolerance = data.get('tolerance', 1e-6)
-    for iteration in range(data.get('maxIterations', 40)):
+    for iteration in range(int(data.get('maxIterations', 40))):
         optimize(m, data.get('seconds', 15))
         theta = {h['id']: pyo.value(m.theta[h['id']], exception=False) for h in data['hypotheses']}
         theta = {h['id']: theta[h['id']] if theta[h['id']] is not None else h.get('lower', 0) for h in data['hypotheses']}
@@ -70,12 +71,15 @@ def analyze(input_data):
     samples = [canonical(s, data['hypotheses']) for s in data['samples']]
     diagnostics = {'schema': 'local-inverse-analysis.v1', 'modelCalls': 0, 'notes': [],
                    'originalLambda': data.get('lambda', .01), 'selectedLambda': data.get('lambda', .01)}
+    # This is a distinct, explicitly budgeted set, never a relabelled fit interval.
     # Bounded desktop work. Never silently truncate historical samples.
     if len(samples) > 30 or len(data['hypotheses']) > 8:
+        diagnostics['compatibility'] = analyze_compatibility(data, baseline.get('theta'))
         diagnostics.update(status='skipped_size_limit')
         diagnostics['notes'].append('本地深度检查限30条历史、8个候选；基础求解仍使用完整输入。')
         return {'input': data, 'result': baseline, 'analysis': diagnostics}
     if baseline['status'] != 'optimal':
+        diagnostics['compatibility'] = analyze_compatibility(data, baseline.get('theta'))
         diagnostics.update(status='skipped_uncertified_baseline')
         return {'input': data, 'result': baseline, 'analysis': diagnostics}
     selected = baseline
@@ -111,6 +115,8 @@ def analyze(input_data):
             'tieRule': 'smaller lambda', 'splitRule': 'SHA256(sample id), round-robin; exchangeable histories assumed'}
     else:
         diagnostics['notes'].append('不足6条历史，保留原正则化强度，不做交叉验证。')
+    diagnostics['compatibility'] = analyze_compatibility(data, selected.get('theta'))
+    diagnostics['compatibility']['pointEstimateSource'] = 'selected_point_estimate'
     # Profile against the best unregularized empirical residual, not a L1-biased point.
     unregularized = fit({**data, 'lambda': 0}, samples)
     ranges = []

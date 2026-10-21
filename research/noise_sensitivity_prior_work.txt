@@ -1,0 +1,288 @@
+未知误差预算、成本结构失配与决策证书：新增近邻核查
+日期：2026-10-20（Asia/Shanghai）
+项目：llm4orTT 0.1；接续 comparison_prior_work.txt，不覆盖旧报告。
+状态：已核查文献与可执行研究建议。本文没有新增实验结果，也不宣称新颖性已经成立。
+
+一、应保留的方向与本轮需要收紧的说法
+
+保留自然语言提出候选成本结构、行为数据限制未知参数、优化器给出方案、
+再检查决策风险的主线。上轮计算策略的负结果不妨碍继续研究，但不能用
+“多加一个模块”替代证据。下一步优先检查证书对行为误差预算和遗漏成本的
+敏感性：究竟哪些假设一放松，原来获证的方案就失去保证？
+
+建议本轮输出“条件风险曲线与失效见证”，而非自动估出一个真实噪声上限。
+最小训练误差、交叉验证分数、集合刚好非空的门槛，各自都有用途；它们
+本身不证明真实参数落在所选集合中，更不证明新方案达到某个概率保证。
+如果本轮只做有限动作、固定候选成本和已声明误差预算，应保留这些限定。
+
+新增文献中最重要的方向约束：
+— [N3] 已研究随不确定集合大小变化的稳健与最坏后悔问题，绘制噪声敏感性
+  曲线本身不是新理论。
+— [N8] TACIT 已把 LLM 的结构建议与历史决策校准结合。泛称“LLM 提结构、
+  逆优化学参数、纠正错模型”不足以形成新的贡献。
+— 可检验的技术点应更窄：由带误差行为隐式定义的集合，在模型不完整或
+  计算未完成时，能否给出有效且有用的条件风险界及明确的失效边界。
+  本报告没有证明此问题不存在其他更近的工作。
+
+二、新增八篇原始论文
+
+以下八篇均不在 comparison_prior_work.txt 的原六篇名单中。
+阅读层级写明已实际访问的部分；没有把作者自述当作独立复现。
+
+[N1] Anil Aswani, Zuo-Jun Max Shen, Auyon Siddiq.
+Inverse Optimization with Noisy Data.
+Operations Research 66(3):870–892, 2018.
+DOI: 10.1287/opre.2017.1705
+https://pubsonline.informs.org/doi/10.1287/opre.2017.1705
+https://arxiv.org/pdf/1507.03266
+证据层级：出版社元数据；作者稿 §2、§3.4，尤其风险一致性和估计一致性
+的区分、Theorem 4 及其 IC 识别条件。
+核查结论：已有带噪逆优化中若干松弛损失统计不一致的分析；其一致性结论
+有明确的凸模型、测量噪声和识别条件。增加样本或优化精度不自动修复损失
+与生成机制的错配。它不是针对本项目有限动作、有界次优选择的现成定理。
+实际作用：将“数据更多就能认出真成本”改成需检验的假设；保留估计误差、
+行为预测误差与真实决策后悔三种不同指标。
+
+[N2] Pedro Zattoni Scroccaro, Bilge Atasoy, Peyman Mohajerin Esfahani.
+Learning in Inverse Optimization: Incenter Cost, Augmented Suboptimality
+Loss, and Algorithms.
+Operations Research 73(5):2661–2679；2024-09-30 在线、2025 卷期。
+DOI: 10.1287/opre.2023.0254
+https://pubsonline.informs.org/doi/10.1287/opre.2023.0254
+https://optimization-online.org/wp-content/uploads/2023/05/arXiv_version.pdf
+证据层级：出版社元数据与作者全文 §3、Definition 4.1、§5。
+核查结论：已有相容成本集合的 incenter、处理不一致数据的 augmented
+suboptimality loss，以及近似次梯度算法。其 ASL 在原次优性差中加入动作
+距离项；几何稳健性与统计覆盖不是同一个保证。
+实际作用：如继续更换学习损失，应加入 ASL/InvOpt 来源明确的对照；如果
+只实现相似损失公式，写“适配”，不能写成完整复现或自动具有原文全部保证。
+代码/数据入口由出版社提供：10.1287/opre.2023.0254.cd；本轮未运行。
+
+[N3] André Chassein, Marc Goerigk.
+Variable-sized uncertainty and inverse problems in robust optimization.
+European Journal of Operational Research 264(1):17–28, 2018.
+DOI: 10.1016/j.ejor.2017.06.042
+https://eprints.lancs.ac.uk/id/eprint/86841/
+https://eprints.lancs.ac.uk/id/eprint/86841/1/paper.pdf
+证据层级：作者机构书目及接受稿 §1、§3.2.2、§3.3.2。
+核查结论：已有不确定集大小变化、某方案保持最小最大后悔最优的范围，以及
+最好/最坏逆稳健性。其核心集合是可变大小的成本不确定集，相关表述不能
+冒充本项目首创。
+实际作用：本项目必须区别“固定方案后悔不超过 tau 的预算范围”和
+“该方案在所有方案中最小最大后悔最优的范围”；两者不是同一阈值。
+它也没有据训练拟合自动识别真实人的行为误差上限。
+
+[N4] Yasunari Hikima, Naoyuki Kamiyama, Shinsaku Sakaue, Taira Tsuchiya.
+A Sampling-Based Relaxation Approach to Contextual Inverse Optimization.
+IJCAI 2026, main track, 4348–4357.
+DOI: 10.24963/ijcai.2026/484
+https://www.ijcai.org/proceedings/2026/484
+https://www.ijcai.org/proceedings/2026/0484.pdf
+证据层级：官方元数据、全文 §2、§3.1 Algorithm 1 与式 (2)。
+核查结论：已有只用上下文与最优动作、以最终 regret 评价的成本预测学习；
+该文通过采样可行竞争方案构造 relaxed inverse optimization problem。
+全文主设定是 i.i.d. 的上下文—最优解对。其采样扰动参数 sigma 用来生成
+候选方案，不是估计历史人的行为误差预算。
+实际作用：不能把 decision-focused IO 或“没看到真成本也能学”列为创新；
+如借鉴采样方案，必须记住未检查的方案仍可能破坏完整最坏风险保证。
+
+[N5] Rina Foygel Barber, Emmanuel J. Candès, Aaditya Ramdas,
+Ryan J. Tibshirani.
+The limits of distribution-free conditional predictive inference.
+Information and Inference: A Journal of the IMA 10(2):455–482, 2021；
+2020-08-25 在线发表。
+DOI: 10.1093/imaiai/iaaa017
+https://academic.oup.com/imaiai/article/10/2/455/5896927
+https://www.stat.berkeley.edu/~ryantibs/papers/limits.pdf
+证据层级：已发表全文 §1、§2.1–2.2、Proposition 2.2。
+核查结论：在其分布无关回归设定下，边际预测覆盖不能直接升级为逐测试
+条件覆盖；无限制的精确条件覆盖会导致无用区间。
+实际作用：不能把平均校准表现改写成“这一个实例肯定安全”。这是特定统计
+设定的边界，不能外推成所有逆优化、有限参数模型或有额外假设的校准都不可能。
+
+[N6] Rina Foygel Barber, Emmanuel J. Candès, Aaditya Ramdas,
+Ryan J. Tibshirani.
+Conformal prediction beyond exchangeability.
+The Annals of Statistics 51(2):816–845, 2023.
+DOI: 10.1214/23-AOS2276
+https://projecteuclid.org/journals/annals-of-statistics/volume-51/issue-2/Conformal-prediction-beyond-exchangeability/10.1214/23-AOS2276.full
+https://www.stat.cmu.edu/~ryantibs/papers/nexcp.pdf
+证据层级：作者全文 §1、§5.1、§5.3；官方 DOI 的 OpenAlex 元数据。
+核查结论：经典共形需要交换性等条件；扩展方法可用权重与分布偏移项刻画
+覆盖损失。误差界只有偏移项足够小时才有信息。原文明确讨论预先固定权重，
+不能把任意主动采样或数据依赖调参自动纳入原保证。
+实际作用：未来若加入校准，需另列数据划分、交换性/漂移条件及校准事件；
+“用了共形”本身不消除模型结构缺失或任意选择偏差。
+
+[N7] Zhuohan Wang, Ziwei Zhu, Ziniu Li, Congliang Chen, Yizhou Han,
+Yufeng Lin, Zhihang Lin, Angyang Gu, Xinglin Hu, Ruoyu Sun, Tian Ding.
+ORGEval: Graph-Theoretic Evaluation of LLMs in Optimization Modeling.
+2025-10-31 预印本；arXiv:2510.27610。
+https://arxiv.org/abs/2510.27610
+https://arxiv.org/html/2510.27610
+证据层级：原始元数据与全文 §2.2–2.3、§3.1。
+核查结论：某个实例的最优值碰巧相等，不证明模型表达正确。作者提出图同构
+评价，但其等价定义比一般运筹模型等价更严格，主要容许变量/约束置换。
+实际作用：本项目语言评价要分开“结构是否忠实”和“决策结果是否好”。
+不能把单实例零 regret 当成本恢复正确；也不能把非同构的合法等价建模一律
+判错。OpenAlex 作者字段与 arXiv 不同，本记录采用原始 arXiv 的 Yizhou Han。
+
+[N8] Maxime Bouscary, Marco Molinaro, Sirui Li, Saurabh Amin,
+Ishai Menache, Konstantina Mellou.
+TACIT: Optimization Models that Learn from Their Mistakes.
+2026-09-29 预印本；arXiv:2609.38434。
+https://arxiv.org/abs/2609.38434
+https://arxiv.org/html/2609.38434
+证据层级：原始元数据、全文 §3、§4.1–4.3、§5 的次优反馈段落。
+核查结论：已有 LLM 提出结构修复、优化器校准数值、从被拒方案和用户修正
+提取切约束的双向流程。主设定修正方案是目标模型最优，部分实验放松至近优。
+实际作用：该文是语言与行为共同修复结构的非常直接近邻。项目可区别研究
+“给定一族可能结构及明确误差界时如何审计风险”，但不能据此断言该文没有
+所有相关能力；本轮未运行其代码，也未重现作者报告成绩。
+
+三、两个必须保留的数学区别
+
+1. 能拟合历史的最小误差，不是真实误差的已知上界。
+
+记 delta_min = min_theta max_k g_k(theta)，其中 theta 受先验范围限制。
+它只回答“这个模型族至少要放宽多少，才有某个参数解释全部历史”。
+它不回答“真实人在每次选择时最多会多花多少”，也不回答真参数在哪里。
+
+一个可手算反例，以下为本项目教学推导，不作创新主张：
+可行动作 A、B；模型成本 C_theta(A)=theta，C_theta(B)=1；
+theta in [0,2]；唯一历史选择为 A。
+delta_min=0，因为 theta<=1 时 A 最优。
+若真实 theta*=2，则该历史只是一条损失为1的次优选择。
+采用 delta=delta_min=0，得到 U_0=[0,1]，排除了 theta*=2。
+在 U_0 内，A 的最大后悔为0；真实 theta* 下，A 的后悔为1。
+所以“历史能完美拟合”和“在拟合集合上零风险”可以同时成立，真实风险
+仍不为零。这个反例验证的是逻辑缺口，并非证明任何统计校准都不可能。
+
+2. 行为误差、遗漏成本和计算误差必须分别记账。
+
+设真实成本 C*(z,x)=C_theta*(z,x)+r(z,x)，可行域相同；
+历史行为满足 C*(z_k,xhat_k)-min_y C*(z_k,y)<=delta_k。
+若对该场景所有动作有 r(z_k,y)-r(z_k,xhat_k)<=Gamma_k，
+那么对每个 y：
+  C_theta*(z_k,xhat_k)-C_theta*(z_k,y)
+  = C*(z_k,xhat_k)-C*(z_k,y)
+    -r(z_k,xhat_k)+r(z_k,y)
+  <= delta_k+Gamma_k。
+因此 theta* 属于按 delta_k+Gamma_k 建立的模型相容集合。
+
+若新场景还有 r(z,x)-r(z,y)<=Gamma_new 对所有竞争 y 成立，
+则固定方案 x 的真实后悔不超过：
+  R_model(x; U_{delta+Gamma}) + Gamma_new。
+
+这些不等式是成本差分解与集合包含的直接推论，不是新的理论贡献。
+Gamma 可以由遗漏项在动作间的最大差给出；使用残差的振幅
+max r - min r 比机械地把任意共同常数也算进误差更符合决策问题。
+若只知道 |r|<=epsilon，可取 Gamma<=2 epsilon。
+如果遗漏的是硬约束或动作根本不可行，上述“相同可行域”前提不成立，
+不能靠增大成本误差预算修补。若 Gamma 没有外部依据，也只能画条件曲线，
+不能把曲线上的某点选作已验证的真实保证。
+
+四、统计校准能说明什么，不能说明什么
+
+例如先用训练集得到 theta_hat，再用独立校准集计算观测行为在
+theta_hat 下的次优性分数。若校准与未来观测满足交换性，按正确的分位数
+规则构造阈值，可以针对这个观测分数研究未来覆盖。
+但该事件是“未来观察到的行为，在 theta_hat 的成本下分数不过阈值”；
+它不是“theta* 位于 U_delta”，也不是“我们自己选择的部署动作真实风险小”。
+换一个需要证明的事件，就需要新的联系和假设，不能偷换。
+
+同样，逐样本或边际保证不自动等于整批历史同时相容、逐实例条件覆盖或
+主动选取反馈后的有效性。普通留出集不能补偿从训练到测试的任意分布漂移。
+N5、N6 说明常见统计边界；原六篇中的 Conformal Inverse Optimization
+给出另一种明确的覆盖事件。三者需要按各自原始设定比较。
+
+在当前缺少真实成本观测、真实误差上限和可靠生成机制证据时，最诚实且
+可执行的结果是：
+  “若行为误差不超过 delta，遗漏成本差不超过 Gamma，
+   则经核验的这个方案最多后悔 B(delta,Gamma)。”
+delta、Gamma、模型族、参数范围、损失单位、数值容差必须与该结论一起保存。
+
+五、建议立即执行的研究改动
+
+1. 保留上轮冻结比较和负结果；新实验作为新的敏感性阶段，不重写旧主比较。
+2. 先固定同一个历史集、方案、参数范围和阈值，扫描预先规定的 delta。
+   同一条曲线上的多个 delta 不作为多个独立实验单位。
+3. 对每个非空 U_delta，报告风险上下界、获证/风险见证/未决及实际耗时。
+   U_delta 为空单列为假设不相容；不能把空集下的真空结论作为安全。
+4. 若 delta 增大，U_delta 只会扩大；固定方案的真实最大相容后悔不减。
+   这是核验用的基本单调性。求解器的松界不必每次更紧；应用跨点有效
+   单调包络须保留其方向证明，不能把离散采样点伪称精确转折。
+5. 加入明确的成本结构遗漏条件：真结构保留、遗漏一项、加入伪特征、
+   完全错误候选。隐藏真值只用于独立审计，不参与预算选择或方案挑选。
+6. 依次检查：空集发现、真值排除、错误放行、获证比例、样本外后悔。
+   合成匹配条件下的错误放行首先是实现/证书问题；故意错设条件下的
+   错误放行说明前提失效。两种情况应分栏，不混成一个“算法错误率”。
+7. 若要研究遗漏成本补偿，可先做上节的保守 Gamma 加法校验；更紧的
+   联合残差结构建模属于后续算法工作，不能先写成已经实现。
+8. 给语言模块留下冻结接口：文本、模型/版本、提示词、原始输出、候选
+   特征、拒绝原因和运行状态。未调用其他模型时用“待实验”标记，
+   不能把手工候选或合成候选写成真实 LLM 发现。
+
+最有希望的可执行问题是：
+“如何把行为误差与成本结构遗漏对决策保证的影响分开，计算并核验每个
+方案在这两类假设下的有效风险边界，使错误预算导致的假安全可见？”
+它需要新的机制证据、强基线和明确算法/理论增量，才可能发展为方法论文；
+单独增加敏感性图或复述以上代数关系，还不足以支撑 CCF A 贡献。
+
+六、检索记录、失败和排除
+
+使用 sci-literature-research 工作流；这是定向近邻核查，不是系统综述。
+机器可读记录：
+work/research/noise-sensitivity-search-log.json
+work/research/noise-sensitivity-source-ledger.json
+
+Organon 查询：
+Q1: "inverse optimization" "suboptimal" loss；OpenAlex；max_results=8。
+Q2: "inverse optimization" "decision focused"；all；max_results=6/来源。
+Q3: "optimization modeling" "evaluation" language models；OpenAlex；
+    max_results=8。
+这三次工具响应均成功；Q2 的 PubMed 返回0条，arXiv/OpenAlex/
+Semantic Scholar 均返回结果。本轮该查询没有 Semantic Scholar 429；
+不可把上轮接口失败冒充本轮状态。结果里有不相关的物理逆问题和综述。
+
+网页查询：
+inverse optimization "noise" "sensitivity"
+inverse optimization "approximate" "prediction" "uncertainty"
+"inverse optimization" "approximate solutions"
+"inverse optimization" "sensitivity analysis"
+"inverse optimization" "noise budget"
+"inverse optimization" "predictive" "approximate"
+"Variable-sized uncertainty and inverse problems in robust optimization"
+"Conformal prediction beyond exchangeability"
+"inverse optimization" "misspecification"
+"inverse optimization" "bounded rationality" "unknown"
+"optimization modeling" 与 "MAMO" 相关原始记录也作了背景筛查。
+
+另用 Organon DOI lookup 核验 N1–N6，六次均返回匹配的 OpenAlex 元数据。
+OpenAlex 在线年份与卷期年份不同的条目，采用出版社/作者刊物版区分记录：
+N2 为2024在线、2025卷期；N3 为2017在线记录、2018卷期；
+N5 为2020在线、2021卷期。N7 作者字段以原始 arXiv 为准。
+
+来源失败与恢复：
+— N3 的 ScienceDirect 直接页面返回 Internal Error；改读作者机构接受稿。
+— N4 官方 PDF 首次直接 open 返回 Internal Error；从官方页面 PDF 链接
+  click 后成功，正文已读；不是“仅摘要”。
+— N5 首次尝试的 OUP 路径尾号5904262失败，不能作有效来源；按刊物版
+  PDF 中的5896927地址访问成功。作者站刊物版 PDF 同时可读。
+— N6 的 Project Euclid full 页面仅返回1行，无可读全文；使用作者 PDF。
+
+去重与排除：
+— 原六篇不重复计为新增；N2 预印本、正式论文和代码 DOI 只算一个工作。
+— MAMO 只用作已有数据来源背景，未列为新增关键贡献文献。
+— 发现 IJCAI2025 的 An Inverse Optimization Approach to Contextual
+  Inverse Optimization（10.24963/ijcai.2025/596）；本轮新增名单优先放
+  同一研究线更近的2026论文，不把两篇充作两个独立创新边界。
+— 综述、物理逆设计、与任务不相干的战略学习结果不纳入核心八篇。
+— 没有执行这些论文的官方代码，没有跨论文复现实验胜负结论。
+
+给读者的大白话：
+旧购物记录可能本来就买贵了一点，价目表也可能漏写一种运费。
+“找一张能解释旧记录的价目表”不等于“知道真正的价目表”。
+这次应把两个问题分开检查：容许旧记录买贵多少，容许漏掉的费用有多大。
+程序可以把每种假设下最多会吃多少亏算清楚；但不能偷偷选一个最漂亮的
+假设，再说现实一定如此。

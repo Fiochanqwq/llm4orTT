@@ -1,6 +1,6 @@
 {
   "name": "llm4ortt",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "private": true,
   "type": "module",
   "main": "electron/main.cjs",
@@ -35,7 +35,11 @@
     "qa:multifamily": "node scripts/multifamily-qa.mjs",
     "experiment:stress": "node scripts/stress-public.mjs",
     "test:stress": "node scripts/stress-public.mjs --test",
-    "qa:stress": "node scripts/stress-qa.mjs"
+    "qa:stress": "node scripts/stress-qa.mjs",
+    "test:certification": "node scripts/certification-test.mjs",
+    "test:certification-ui": "node tools/test_desktop_certification.cjs && node tools/test_desktop_sensitivity.cjs",
+    "experiment:publication": "node scripts/publication-study.mjs",
+    "audit:publication": "node scripts/publication-study.mjs --audit-only"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "0.132.1",
@@ -69,7 +73,7 @@
     "productName": "llm4orTT",
     "electronDist": "node_modules/electron/dist",
     "directories": {
-      "output": "release/0.1.0",
+      "output": "release/0.1.2",
       "app": "build/stage"
     },
     "files": [
@@ -122,7 +126,9 @@
         "filter": [
           "inverse.py",
           "inverse_local.py",
-          "inverse_benchmark.py"
+          "inverse_benchmark.py",
+          "inverse_certified.py",
+          "inverse_sensitivity.py"
         ]
       }
     ],

@@ -1272,5 +1272,15 @@
     "masked": 2,
     "logGenerator": "deterministic-template",
     "history": "solver-generated; not actual human decisions"
+  },
+  "certification": {
+    "noise": {
+      "kind": "absolute",
+      "budget": 0
+    },
+    "threshold": 0,
+    "maxSeconds": 20,
+    "maxOracleCalls": 200,
+    "maxAssignments": 4096
   }
 }

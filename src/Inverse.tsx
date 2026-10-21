@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { ArrowRight, Download, FlaskConical, Play, Square, Upload } from 'lucide-react';
 import { api } from './api';
 import './inverse.css';
+import { inverseCertificationInput as CertificationInput, inverseCertificationReport as CertificationReport } from './inverse-certification.js';
 
 type Hypothesis = { id: string; label: string; source: string; weight: number; retained: boolean };
 type Result = {
@@ -12,7 +13,7 @@ type Result = {
   history: { round: number; meanResidual: number; status: string; accepted?: boolean }[];
   input: Record<string, unknown>;
   spending?: { modelCalls: number; cacheHits: number; maxModelCalls: number; inputTokens: number; outputTokens: number; usageComplete: boolean };
-  localAnalysis?: { status: string; selectedLambda?: number; supersededByModelProposal?: boolean; notes?: string[];
+  localAnalysis?: { compatibility?: Record<string, unknown>; status: string; selectedLambda?: number; supersededByModelProposal?: boolean; notes?: string[];
     identification?: { ranges: { id: string; label: string; status: string; lower: number | null; upper: number | null }[] } };
 };
 type Saved = { id: string; createdAt: string; meanResidual: number; status: string };
@@ -74,6 +75,7 @@ export function Inverse({ provider }: { provider: string }) {
       <textarea id="inverse-logs" className="inverse-text inverse-logs" value={logs} disabled={busy || !valid} onChange={e => changeText('logs', e.target.value.split('\n'))}/>
       <details className="inverse-data"><summary>查看或编辑历史决策与候选模型 · JSON</summary><label className="inverse-editor-label" htmlFor="inverse-input">任务、日志、候选特征与历史决策</label>
       <textarea id="inverse-input" className="inverse-editor" spellCheck={false} value={draft} disabled={busy} onChange={e => edit(e.target.value)}/></details>
+      <CertificationInput draft={draft} disabled={busy} update={edit}/>
       <label className="inverse-toggle"><input type="checkbox" checked={localAnalysis} disabled={busy} onChange={e => { setLocalAnalysis(e.target.checked); setStale(!!result); }}/>本地自动检查：选择正则化强度、检查权重范围（不调用大模型）</label>
       <label className="inverse-toggle"><input type="checkbox" checked={useLLM} disabled={busy} onChange={e => { setUseLLM(e.target.checked); setStale(!!result); }}/>需要时请大模型补充规则（本次最多 1 次，重复结果优先复用）</label>
       <p className="inverse-note">默认在电脑上计算已有候选规则，不花模型调用费。勾选大模型后，任务文本与训练样本才可能发送给服务商；已能解释历史时自动跳过。本地检查假定历史可以交叉验证，时间先后有影响的数据请关闭自动检查。</p>
@@ -88,11 +90,12 @@ export function Inverse({ provider }: { provider: string }) {
           <p className="inverse-note">权重不一定唯一。零残差表示能解释这些历史选择，不代表已经恢复唯一的真实规则。</p>
           {result.spending && <p className="inverse-note">本轮模型调用 {result.spending.modelCalls} 次 · 复用已有回答 {result.spending.cacheHits} 次{!result.spending.usageComplete ? ' · 服务未返回完整用量' : ''}</p>}
         </div>
+        {result.localAnalysis && <CertificationReport analysis={result.localAnalysis}/>}
         {result.localAnalysis && <div className="inverse-card"><h2>本地数学检查</h2>
           {result.localAnalysis.selectedLambda !== undefined && <p>自动选择的正则化强度：{format(result.localAnalysis.selectedLambda)}。使用训练历史内部验证，不查看测试答案。</p>}
           {result.localAnalysis.supersededByModelProposal && <p className="inverse-note">以下范围对应大模型补充前的本地模型。</p>}
           {result.localAnalysis.notes?.map((note, i) => <p className="inverse-note" key={i}>{note}</p>)}
-          {result.localAnalysis.identification && <><p className="inverse-note">范围越宽，越不能把某个数字当成唯一答案。范围按最小训练残差计算，可能与带惩罚的估计不同；它不是置信区间。</p>
+          {result.localAnalysis.identification && <><p className="inverse-note">以下是经验拟合范围：它说明哪些权重能把已有记录拟合得差不多。范围很窄也不等于找到了真实价格；它不是置信区间，也不能替代上面的误差上限与决策保证。</p>
             {result.localAnalysis.identification.ranges.map(r => <p key={r.id}>{r.label}：{r.status === 'optimal' && r.lower !== null && r.upper !== null ? `${format(r.lower)} ～ ${format(r.upper)}` : '未完成证明，暂不报告范围'}</p>)}</>}
         </div>}
         <div className="inverse-card"><h2>经验 → 白盒规则</h2><p className="inverse-note">下列公式展示第一个历史上下文中的成本项；其余上下文保存在导出证据中。</p>{result.hypotheses.map(h => <article className={'inverse-hypothesis ' + (!h.retained ? 'pruned' : '')} key={h.id}><div><b>{h.label}</b><span>{h.retained ? '保留' : '剔除'} · θ = {format(h.weight)}</span></div><p>“{h.source || '用户提供的候选假设'}”</p><code>{format(h.weight)} × {formula(h.id)}</code></article>)}</div>

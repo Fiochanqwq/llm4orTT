@@ -1,0 +1,33 @@
+import { chromium, expect } from '@playwright/test';
+import fs from 'node:fs';
+import path from 'node:path';
+import { pathToFileURL } from 'node:url';
+const out=path.resolve('实验/决策契约研究_2026-10-21_01');
+const browser=await chromium.launch({executablePath:'C:/Program Files/Google/Chrome/Application/chrome.exe',headless:true});
+try {
+  const page=await browser.newPage({viewport:{width:1440,height:1000}});
+  const errors=[];page.on('pageerror',e=>errors.push(e.message));
+  await page.goto(pathToFileURL(path.join(out,'研究结果.html')).href);
+  await expect(page.locator('h1')).toContainText('具体反例未提高');
+  await expect(page.locator('.case-row:visible')).toHaveCount(60);
+  await page.locator('#filter').fill('698081777');
+  await expect(page.locator('.case-row:visible')).toHaveCount(1);
+  await page.locator('#filter').fill('');
+  await expect(page.locator('.case-row:visible')).toHaveCount(60);
+  const links=await page.locator('a[href]').evaluateAll(nodes=>nodes.map(n=>n.getAttribute('href')).filter(x=>!x.startsWith('https:')));
+  for(const link of links)if(!fs.existsSync(path.join(out,decodeURIComponent(link))))throw Error('Missing evidence: '+link);
+  if(await page.locator('img').evaluateAll(imgs=>imgs.some(i=>!i.complete||!i.naturalWidth)))throw Error('Missing image');
+  const body=await page.locator('body').innerText();
+  if(/codex|openai|chatgpt/i.test(body))throw Error('Unexpected branding');
+  await page.locator('#filter').blur();
+  await page.evaluate(()=>window.scrollTo(0,0));
+  await page.screenshot({path:path.join(out,'报告首页.png')});
+  await page.setViewportSize({width:390,height:844});
+  await page.evaluate(()=>window.scrollTo(0,0));
+  await page.screenshot({path:path.join(out,'报告手机预览.png')});
+  if(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth))throw Error('Mobile overflow');
+  if(errors.length)throw Error(errors.join('\n'));
+  const result={passed:true,caseRows:60,localLinks:links.length,javascriptErrors:0,mobileOverflow:false,brandingCheck:true};
+  fs.writeFileSync(path.join(out,'report-qa.json'),JSON.stringify(result,null,2));
+  console.log(JSON.stringify(result));
+}finally{await browser.close()}

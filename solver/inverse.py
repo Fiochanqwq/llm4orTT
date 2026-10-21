@@ -66,7 +66,7 @@ def validate(data):
                 raise ValueError('Inconsistent variable bounds')
         terms(s['model']['objective'])
         if not any(s['model']['objective'].values()):
-            raise ValueError('A known nonzero cost anchor is required to prevent the all-zero objective')
+            raise ValueError('A known nonzero cost anchor is required by this model convention; it does not guarantee identifiability or prevent feature cancellation')
         for row in s['model']['constraints']:
             terms(row['terms'])
             number(row['rhs'], 'rhs')

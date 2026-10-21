@@ -14,6 +14,7 @@ archive/
 
 # Local research data and historical source snapshots (never upload)
 experiments/
+/实验/
 work/research/
 /work/
 # Saved acceptance conversations are research data even under test/fixtures.
@@ -52,3 +53,25 @@ test-results/
 *.safetensors
 .DS_Store
 Thumbs.db
+
+
+# Local portable application kept alongside the canonical source
+/resources/
+/locales/
+/*.exe
+/*.dll
+/*.pak
+/*.bin
+/version
+/vk_swiftshader_icd.json
+/LICENSE.electron.txt
+/LICENSES.chromium.html
+/本地验证结果/
+
+/icudtl.dat
+/*.lnk
+/Browser.cmd
+
+# Local experiment drafts, historical snapshots, and report caches
+/research/scratch/
+/_归档_自我否定/

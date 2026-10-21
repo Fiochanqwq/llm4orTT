@@ -26,4 +26,5 @@ jobs:
       - run: npm run test:mamo
       - run: npm run test:multifamily
       - run: npm run test:stress
+      - run: npm run test:certification
       - run: node scripts/llm-grounding-test.mjs

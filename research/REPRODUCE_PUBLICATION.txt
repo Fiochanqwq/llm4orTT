@@ -1,0 +1,101 @@
+PUBLICATION STUDY WORKFLOW - 2026-10-21
+
+Delivered archive revision
+  实验/出版级复核_2026-10-21_归档修正版/
+The original run remains in 实验/出版级复核_2026-10-21/. Its mathematical
+comparison and sensitivity checks passed, but the regression association audit
+failed because the copied file's basename differed from its case identifier.
+The revision preserves the original freeze and failed audit, corrects only the
+regression association, and re-audits every result. All 3,600 scientific input/
+result files are byte-identical; no method was rerun or selected.
+
+The current runner fixes this filename bug. Its source therefore intentionally
+differs from the actual execution snapshot: --resume must reject this drift.
+Use a new directory for new experiments. To audit the delivered revision:
+  runtime/python/python.exe -X utf8 research/verify_followup.py 实验/出版级复核_2026-10-21_归档修正版
+To regenerate its reports and bundle:
+  node scripts/publication-deliver.mjs --render-only --out 实验/出版级复核_2026-10-21_归档修正版
+To verify its packaged bytes using only the standard library:
+  runtime/python/python.exe -X utf8 research/verify_publication_bundle.py 实验/出版级复核_2026-10-21_归档修正版 --archive 实验/出版级复核_2026-10-21_归档修正版/证据包.zip
+
+Canonical maintenance locations
+  solver/       Production numerical implementations.
+  server/       Authenticated local HTTP and Python process APIs.
+  src/          Frontend sources; resources/ is a release copy.
+  research/     Generators, comparison methods, independent verifiers and analysis.
+  tests/        Exact-certificate and experiment-integrity tests.
+  test/         Application and previous experiment regression tests.
+  实验/         Local reports, raw observations, logs and source snapshots.
+
+Single operational entry point (Node >=24, prepared project Python runtime)
+  node scripts/publication-deliver.mjs
+
+This full workflow uses the Codex bundled report runtime on this Windows host.
+Use --report-python to supply another Python with reportlab, Pillow and pypdf.
+Matplotlib is loaded from work/research/plot-deps; the report renderer accepts
+--plot-deps and --font for other installations. Chrome is used for report QA.
+For numeric evidence only:
+  npm run experiment:publication
+For reports/QA/bundling from already audited numeric evidence:
+  node scripts/publication-deliver.mjs --render-only
+
+The default batch is 实验/出版级复核_2026-10-21.
+An existing frozen batch cannot be replaced by a fresh execution.
+To run a separately identified replication:
+  npm run experiment:publication -- --out 实验/出版级复核_新批次
+To resume the identical source/runtime/protocol:
+  npm run experiment:publication -- --resume
+To independently recheck and regenerate numeric analysis:
+  npm run audit:publication
+
+Order of operations
+  1. Run exact-certificate/integrity tests and application tests.
+  2. Type-check and rebuild the frontend.
+  3. Exercise the real authenticated HTTP API in an isolated local store.
+     No model credentials are needed; model calls are disabled.
+  4. Freeze protocol, source bytes, runtime versions and randomized schedules.
+  5. Execute the Python internal APIs with truth-free method inputs.
+  6. Independently rebuild exact 2D feasible polygons and enumerate actions.
+  7. Audit the full planned inventory, hashes, statuses, bounds and witnesses.
+  8. Compute the prespecified stratified paired instance bootstrap.
+  9. Render Chinese reports from saved data with publication_report.py.
+
+Loopback access must be available for HTTP integration checks. A network sandbox
+that denies access to the test's own 127.0.0.1 server is an environment failure,
+not an algorithm outcome. Retain its log, fix the environment, then rerun the
+preflight before any scientific freeze.
+
+Evidence contract
+  - The entire study has an OS-owned exclusive writer lock.
+  - Atomic JSON replacement prevents truncated progress and summaries.
+  - Raw cases, attempts and method results are immutable and SHA256-sealed.
+  - Recorded failures are not automatically retried. An interrupted attempt
+    without an outcome becomes an explicit failed outcome at resume.
+  - A missing digest blocks reuse; do not reconstruct it from untrusted data.
+  - Resuming never refits a saved point estimate or changes its chosen decision.
+  - Source, protocol, runtime, snapshot or schedule drift requires a new batch.
+  - Hashes detect accidental changes; this is not a signed public registry.
+  - Historical follow-up/comparison command contracts remain supported.
+    Their archived source snapshots, not today's sources, reproduce old runs.
+
+Scientific interpretation
+  This is a fresh synthetic mechanism replication, not a new language benchmark.
+  There are 120 independent family-seed instances per cohort, not 2,880 or 720
+  independent samples. Three generator families are fixed, not sampled domains.
+  The primary contrast is dual_reuse minus full_warm_adaptive_dual at 8 LP calls.
+  Noise conditions are averaged within instance; families have equal weight.
+  The percentile bootstrap interval is exploratory. No p-values are selected.
+  Missing, failed and unresolved runs retain their planned denominators.
+  Timing is descriptive on one workstation, not a dedicated speed benchmark.
+  Conditional certificate correctness is distinct from truthful model assumptions.
+  A noise cap cannot repair a wrong parameter box, feature or hard constraint.
+  No new LLM calls, external task scores or publication-readiness claim are made.
+
+Reproducing from a frozen batch after source changes
+  Use the frozen-source tree in a separate explicitly chosen checkout, with the
+  package lock and the recorded Python/highspy/numpy/pyomo versions. A frozen
+  snapshot does not vendor the runtime. For audit-only use, the independent
+  verify_followup.py and verify_comparison.py require only Python's standard
+  library. The regression case is copied inside the new batch.
+  The report renderer needs the bundled reportlab/Pillow/pypdf runtime and
+  matplotlib, plus a Chinese font; its path flags are documented by --help.
