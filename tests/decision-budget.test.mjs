@@ -8,15 +8,15 @@ import crypto from 'node:crypto';
 // No provider request or persistent file is created by these tests.
 const source = realFs.readFileSync('scripts/decision-contract-api.mjs', 'utf8').replace(/^import .*;\r?\n/gm, '');
 const sha = value => crypto.createHash('sha256').update(value).digest('hex');
-async function run({failure=false, completion=60, started=false, modern=false, priorCost=.3, tamperPrior=false, badFloor=false}={}) {
+async function run({failure=false, completion=60, started=false, modern=false, priorCost=.3, tamperPrior=false, badFloor=false, task='T8', explicitWorkspace=false}={}) {
   const root=process.cwd(), out=path.join(root,'实验','budget-test');
-  const queue=Array.from({length:modern?240:600},(_,i)=>({id:`case_${i}`,maxTokens:3072,messages:[{role:'user',content:'test'}],json:true}));
+  const queue=Array.from({length:modern?(task==='T17'?160:240):600},(_,i)=>({id:`case_${i}`,maxTokens:3072,messages:[{role:'user',content:'test'}],json:true}));
   const prior=JSON.stringify({accounted_upper_CNY:priorCost,measured_usage_cost_CNY:priorCost,in_flight_reserved_CNY:0});
   const priorPath=path.join(root,'实验','previous-spend.json');
   const reports=[{path:priorPath,sha256:sha(prior)}];
-  const modernBudget={total_CNY:15,stop_remaining_CNY:badFloor?null:3,max_model_calls:240,automatic_retries:0,prior_spend_reports:reports};
+  const modernBudget={total_CNY:15,stop_remaining_CNY:badFloor?null:3,max_model_calls:queue.length,automatic_retries:0,prior_spend_reports:reports};
   const q=JSON.stringify(queue), prereg=JSON.stringify({estimate:{costs:{peak:{total_CNY:.9}}},
-    ...(modern?{task:'T8',n:80,MDE:.15,arms:['verdict','point','point+anchor'],switching_rules:['Stop below the twenty-percent floor'],budget:modernBudget}:{})});
+    ...(modern?{task,n:80,MDE:.15,arms:['verdict','point','point+anchor'],switching_rules:['Stop below the twenty-percent floor'],budget:modernBudget}:{})});
   const budget={total_CNY:6,stop_remaining_CNY:1.2,max_model_calls:600,model:'deepseek-flash',
     ...(modern?{...modernBudget,schema:'task-board-budget.v2'}:{}),
     prices:{peak:{hit:.04,miss:2,output:8},off_peak:{hit:.02,miss:1,output:4}},queue_sha256:sha(q),prereg_sha256:sha(prereg)};
@@ -36,6 +36,7 @@ async function run({failure=false, completion=60, started=false, modern=false, p
   const fetch=async()=>{calls++;if(failure)throw Error('Simulated network failure');return {ok:true,status:200,text:async()=>JSON.stringify({id:'response',model:'deepseek-flash',choices:[{finish_reason:'stop',message:{content:'{}'}}],usage:{prompt_tokens:1,completion_tokens:completion,prompt_cache_hit_tokens:0}})};};
   class Store {async credentials(){return {apiKey:'synthetic-secret',model:'deepseek-flash',baseURL:'https://api.deepseek.com'};}}
   const fakeProcess={argv:['node','script','--out',out,'--queue',path.join(out,'queue.json'),'--budget',path.join(out,'budget.json'),'--concurrency','1'],env:{LOCALAPPDATA:path.join(root,'state')}};
+  if(explicitWorkspace){const p=path.join(root,'explicit-state.json');files.set(key(p),'{}');fakeProcess.argv.push('--workspace',p);files.delete(key(path.join(root,'state/FYPPPPP/workspace/inverse-workspace.json')));}
   const AsyncFunction=Object.getPrototypeOf(async function(){}).constructor;
   await new AsyncFunction('fs','path','crypto','Store','vault','process','console','fetch','fileURLToPath','Buffer','performance','AbortSignal',source.replaceAll('import.meta.url',"'file:///fake'"))(
     fs,path,crypto,Store,{},fakeProcess,{log(){},error(){}},fetch,()=>path.join(root,'scripts/decision-contract-api.mjs'),Buffer,performance,AbortSignal);
@@ -64,4 +65,10 @@ test('a changed previous spending record is rejected before any request',async()
 test('new tasks cannot reset the spent budget or remove the twenty-percent floor',async()=>{
   await assert.rejects(run({modern:true,priorCost:11.5}),/Estimate exceeds available authorized budget/);
   await assert.rejects(run({modern:true,badFloor:true}),/Budget or task contract differs/);
+});
+test('T17 permits only its registered finite queue and explicit application state',async()=>{
+  const r=await run({modern:true,task:'T17',explicitWorkspace:true});assert.equal(r.calls,160);assert.equal(r.report.brought_forward_accounted_CNY,.3);
+});
+test('unknown task IDs remain rejected before transport',async()=>{
+  await assert.rejects(run({modern:true,task:'T18'}),/Budget or task contract differs/);
 });

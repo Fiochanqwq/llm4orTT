@@ -1,0 +1,88 @@
+{
+  "schema": "autonomous-research.v1",
+  "status": "active",
+  "automation_id": "automation-2",
+  "updated_utc": "2026-10-22T18:38:16.956517+00:00",
+  "completed_batches": [
+    {
+      "task": "T12-T16",
+      "path": "实验/主动证据修复_2026-10-23_01",
+      "prereg_sha256": "e7ca54dec237fc529798c811cafdba641b8af75ba427859742102b940b2bb3a0",
+      "results_sha256": "1dd77d19e65554977b1ce15a85c2808a35fcf1683dd82bb5409886e8e1c703e9"
+    },
+    {
+      "task": "T17",
+      "path": "实验/候选扩展_2026-10-23_01",
+      "prereg_sha256": "d1dd383f4708776df4ca1ca1d6f690122e9dbac493c889a07524902f90b23dfd",
+      "results_sha256": "007d469ee5e21faeb7938a9f3f5a4ee3c5d9aaed0f8a8fa8190b8f454ca20d4f"
+    },
+    {
+      "task": "T19",
+      "path": "实验/原文约束证据_2026-10-23_01",
+      "prereg_sha256": "3185f99417c68449604e87599e75b975ddc95da600c4b1e5acdeef3455b5e8a2",
+      "results_sha256": "3e363ec64d4d6168e05f2947d5059108bed56614b124b50ce196560e285f264e"
+    },
+    {
+      "task": "T18",
+      "path": "实验/更新后分歧检查_2026-10-23_01",
+      "prereg_sha256": "f44410a6a46799cf9f5b190c6658418226e1be80cc81dc7ce38468724cde0be2",
+      "results_sha256": "af14ce0404b3c9b0cdc44a57b9c352ba5944b49d817722d22a385dc765c53b4c"
+    }
+  ],
+  "loop": [
+    "inspect unfavorable results",
+    "state a testable mechanism",
+    "register a separate batch",
+    "implement and execute",
+    "compare repairs and regressions",
+    "save evidence and queue next experiment"
+  ],
+  "budget_snapshot": {
+    "source": "实验/候选扩展_2026-10-23_01/budget-spend.json",
+    "accounted_upper_CNY": 2.2704023,
+    "total_CNY": 15,
+    "reserved_floor_CNY": 3,
+    "automatic_retries": 0
+  },
+  "continuation": "Reports are checkpoints, not a stopping rule. New evidence changes priorities; an unchanged result is not a reason to rerun the same experiment.",
+  "next_experiments": [
+    {
+      "task": "T21",
+      "priority": 1,
+      "hypothesis": "Text-grounded partial constraints can veto poisoned reference feedback before it harms an initially text-consistent model.",
+      "trigger": "T19 found exact conflicts in four public references; T17 evidence harmed two correct answers.",
+      "experiment": "Freeze a reference-independent source-claim extraction extension on training data. Compare reference-only feedback, source-veto feedback and no-update on the same proposed models and question budget. Keep official correctness as the original endpoint, and report text-claim violations as a separate endpoint with exact spans and witnesses.",
+      "first_action": "Read all T19 covered claims including the unflagged time-capacity example; distinguish overly permissive from overly restrictive references. Register T21 before extending the grammar.",
+      "max_new_model_calls": 0,
+      "status": "queued"
+    },
+    {
+      "task": "T24",
+      "priority": 2,
+      "status": "queued",
+      "max_new_model_calls": 0,
+      "hypothesis": "Gains under accurate reference confirmation persist on independently sourced problems with matched information and budgets.",
+      "experiment": "Freeze method and primary comparator; register new problem sources and cluster-aware sampling; specify label adjudication separately from model predictions, confirmation reliability conditions, repeated generation and model robustness. Produce the protocol first; paid runs use the existing cumulative ledger."
+    },
+    {
+      "task": "T22",
+      "priority": 3,
+      "hypothesis": "Explicitly distinguishing share-of-invested-total from share-of-available-budget explains recurring investment failures and yields informative clarification questions.",
+      "experiment": "Form both mathematically valid denominator interpretations from original text, find separating plans with exact arithmetic, and test query selection against a direct reread baseline. Keep ambiguity labels separate from original gold.",
+      "max_new_model_calls": 0,
+      "status": "queued"
+    },
+    {
+      "task": "T23",
+      "priority": 4,
+      "hypothesis": "A source-anchored ratio compiler generates useful repairs beyond copying A/B constraint rows.",
+      "experiment": "Generate ratio and direction alternatives from quoted sentences and variable bindings, add them to the fixed local candidate bank, and compare matched-budget fresh checks and max-split checks. Develop on train, freeze before dev analysis, report historical test reuse explicitly.",
+      "max_new_model_calls": 0,
+      "status": "queued"
+    }
+  ],
+  "canonical_root": "D:/scr/0.2版",
+  "archive_root": "D:/scr/0.2版/实验",
+  "repository_url": "https://github.com/Fiochanqwq/llm4orTT.git",
+  "quality_plan": "research/研究质量与后续验证.md"
+}

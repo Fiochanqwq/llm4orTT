@@ -21,7 +21,7 @@ let broughtForward = 0, measuredForward = 0;
 if (budget) {
   const prereg = JSON.parse(fs.readFileSync(path.join(out, 'prereg.json'), 'utf8'));
   if (budget.schema === 'task-board-budget.v2') {
-    const limits = {T8: {n: 80, calls: 720}, T11: {n: 300, calls: 1200}};
+    const limits = {T8: {n: 80, calls: 720}, T11: {n: 300, calls: 1200}, T17: {n: 80, calls: 160}};
     const limit = limits[prereg.task];
     if (prereg.task === 'T8' && prereg.phase === 'screening') {
       if (!Number.isInteger(prereg.screening_n) || prereg.screening_n < 1 || prereg.screening_n > 2000 ||
@@ -76,7 +76,8 @@ const fd = fs.openSync(lock, 'wx');
 const save = (file, data) => fs.writeFileSync(file, JSON.stringify(data, null, 2) + '\n', { flag: 'wx' });
 let secret = '';
 try {
-  const state = JSON.parse(fs.readFileSync(path.join(process.env.LOCALAPPDATA, 'FYPPPPP/workspace/inverse-workspace.json'), 'utf8').replace(/^\uFEFF/, ''));
+  const statePath = option('--workspace', path.join(process.env.LOCALAPPDATA, 'FYPPPPP/workspace/inverse-workspace.json'));
+  const state = JSON.parse(fs.readFileSync(statePath, 'utf8').replace(/^\uFEFF/, ''));
   const config = await Store.prototype.credentials.call({ data: state, vault }, 'deepseek');
   secret = config.apiKey;
   if (budget && config.model !== budget.model) throw Error('Configured model changed');
