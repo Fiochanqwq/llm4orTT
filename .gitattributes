@@ -8,5 +8,6 @@
 /.gitattributes text eol=lf
 # Published evidence is hashed byte-for-byte and must survive checkout unchanged.
 /docs/evidence/controlled/* -text
+/research/artifacts/decision-contract-20261022/** -text
 *.pdf binary
 *.zip binary

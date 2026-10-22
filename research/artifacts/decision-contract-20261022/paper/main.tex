@@ -1,0 +1,95 @@
+\documentclass[letterpaper]{article}
+\usepackage[preprint]{aaai2027}
+\usepackage[hyphens]{url}
+\usepackage{graphicx}
+\urlstyle{rm}
+\def\UrlFont{\rm}
+\usepackage{natbib}
+\usepackage{caption}
+\usepackage{amsmath,amssymb}
+\frenchspacing
+\pdfinfo{/TemplateVersion (2027.1)}
+\setcounter{secnumdepth}{0}
+\input{facts}
+\input{followup-facts}
+\title{Beyond Matching Objective Values: Exact Decision-Set Audits of Language-Generated Linear Programs}
+\author{llm4orTT Research Project}
+\affiliations{}
+\begin{document}
+\maketitle
+\begin{abstract}
+A language-generated linear program can return the expected objective value while allowing the wrong decisions. We study a decision contract comparing the feasible region and attained optimal face under a fixed variable interpretation. Exact checks preserve a frozen evaluation of \ResponseN{} responses on \HeldoutN{} held-out problems, where witness repair trails abstract feedback and always-pick-B. Follow-up sampling finds errors in \ConsWrong{}/\ConsAgree{} fully agreeing six-draw cases. A three-arm feedback ladder on \LadderN{} selected problems succeeds on \VerdictK{}, \PointK{}, and \AnchorK{} cases; later rounds add no successes. A metamorphic evaluation yields a reference-conditional false-alarm fraction of \FalseK{}/\FlagN{} and triggers its preregistered discard rule. Published references cover \ReferenceN{} original annotation targets; independent human labels were not collected. The results distinguish exact mathematical comparison from reference correctness and identify failures of agreement, richer feedback, and transformation alarms.
+\end{abstract}
+
+\section{Introduction}
+Natural-language optimization systems translate a verbal decision problem into variables, an objective, and constraints. The NL4Opt benchmark makes this translation task explicit \citep{ramamonjison2022nl4opt}. Checking a single optimal value leaves much of the decision problem unexamined: two models can attain the same value at the same point while disagreeing elsewhere.
+
+Our contract checks the whole feasible region and the entire set of attained optima. It separates checking permitted decisions from checking a single returned number. The contribution is an executable audit procedure, a preserved negative repair result, and a reproducible sensitivity analysis of reference readings. The frozen replay is offline. Separately registered follow-ups add sampling, stratified feedback, and metamorphic tests without altering the frozen responses or scores.
+
+\section{Contract and Exact Verification}
+Let a formulation be $M=(A,b,c,s)$ with a fixed, ordered variable catalog and continuous nonnegative variables. Rewrite its objective as a maximization with vector $\bar c=c$ for maximization and $\bar c=-c$ for minimization. Define
+\[
+ P(M)=\{x\in\mathbb{R}^d:Ax\leq b,\ x\geq0\}.
+\]
+For a feasible model with a finite attained optimum $v$, define
+\[
+ O(M)=\{x\in P(M):\bar c^\top x=v\}.
+\]
+We set $O(M)=\varnothing$ when the model is infeasible or its objective is unbounded. A candidate passes the current-instance contract when both $P(M)=P(G)$ and $O(M)=O(G)$ for a reference $G$. This contract preserves the attained optimal decisions; it does not require identical ordering of every nonoptimal decision. The original evaluator records that stronger ordering property separately.
+
+For each row $a^\top x\leq\beta$ of a target model, inclusion is equivalent to $\sup_{x\in P(M)} a^\top x\leq\beta$. Checking all rows in both directions establishes equality. Nonnegativity is included among the rows, and objective equality adds two opposite inequalities when comparing optimal faces. An empty source is contained in every target; an empty target requires an empty source.
+
+\subsection{Numerical Proposals, Rational Certificates}
+The new implementation accepts dimensions from one through six. HiGHS supplies numerical solution proposals \citep{huangfu2018parallel}. Rational reconstruction checks every primal inequality, dual nonnegativity, stationarity, complementary slackness, and equality of primal and dual objectives using exact fractions. For maximization with all domain constraints represented in $Ax\leq b$, a certificate consists of $x,y$ satisfying
+\[
+ Ax\leq b,\quad y\geq0,\quad A^\top y=q,\quad
+ q^\top x=b^\top y .
+\]
+Infeasibility uses a Farkas certificate $y\geq0$, $A^\top y=0$, and $b^\top y<0$. Unbounded support requires a feasible point and a recession ray with positive objective gain. A separating point is checked exactly before it is returned.
+
+Reconstruction is bounded by explicit search and arithmetic limits. A failed certificate raises an unresolved result; it is never converted to equivalence. The original two-dimensional reference remains unchanged. Frozen per-case feasible-region and optimal-face comparisons are reproduced by the new implementation; higher dimensions are exercised by analytic regression cases.
+
+\section{Frozen Design and Offline Replay}
+The frozen cohort contains \HeldoutN{} held-out problems, with development problems retained separately. Each problem supplies two initial candidates, A and B. The abstract repair arm receives the pair and exact relation diagnostics. The witness repair arm additionally receives concrete separating points when available. Prompt and response files, the call ledger, source snapshots, and the sealed evidence archive are checked before replay.
+
+Table~\ref{tab:table1} reports all four arms plus selection baselines. Pick-A and pick-B deterministically reuse the corresponding candidate. Oracle-select chooses a correct candidate whenever either candidate passes the reference contract. This is an upper bound for selecting from that pair, rather than an upper bound for generating a new formulation.
+
+The frozen paired comparison of witness versus abstract feedback contains \PrimaryGains{} gain and \PrimaryLosses{} losses, with exact paired test $p=\PrimaryP$. The witness arm remains below both abstract feedback and pick-B in the frozen counts. Marginal success intervals in the tables are equal-tail Clopper--Pearson intervals \citep{scipybinomial}; they describe sampling uncertainty conditional on the reference labels. They are not paired treatment-effect intervals.
+
+\input{tables}
+
+\section{Admissible-Reading Sensitivity}
+A separate review records generated percentage errors, missing terms in official annotations, and ambiguous multiplicative language. Each structured record preserves the quoted span, official constraints, corrected constraints, optional alternative constraints, and exactly checked points. A feasible witness for the corrected reading is stored separately from the original point that separates two formulations.
+
+The sensitivity metric accepts a candidate if it matches at least one admissible reading in both feasible region and optimal face. For a known annotation error, the erroneous official formulation is replaced. For genuinely ambiguous wording, both supported readings are retained. Generated errors alone do not alter a correct reference.
+
+Table~\ref{tab:table2} retains the frozen scores alongside two requested sensitivity policies. The additional annotation corrections already belong to the seven-case set, so deduplication produces identical policies. The case selection was informed by observed outputs and reviewed by one reader. These results measure sensitivity to specified reading choices. Subsequent reference reuse imports published solutions and checks mathematical validity; it supplies no additional independent reading labels.
+
+\section{Three Observed Failure Modes}
+\paragraph{Shared errors hide behind agreement.}
+Among \BothWrong{} pairs in which both candidates fail the frozen reference, \SharedWrong{} pairs agree in feasible region and optimal face. A comparison of A with B produces no separating point for such agreement. Inspecting language anchors or a separately justified reference is necessary to distinguish shared mistakes from acceptable alternative readings.
+
+\paragraph{Reference readings change measured success.}
+A missing annotation term and an ambiguous phrase affect the score even when a geometric comparison is exact. The sensitivity analysis changes all four success counts while B retains the highest count. Mathematical verification establishes consequences of a reading; deciding which reading is supported still requires linguistic evidence.
+
+\paragraph{Concrete witnesses reach a minority of cases.}
+Only \ExposureN{} of the \HeldoutN{} held-out problems expose an exact witness to repair. The remaining problems provide evidence about the complete prompt pipeline, while witness-specific behavior must be examined on the exposed subset. Within the frozen overall comparison, the observed losses exceed the gains.
+
+\input{followup-section}
+
+Running \texttt{python -m research.replay --check} from the project root reloads raw responses, replays frozen parsing and geometry, reconstructs the reading policies and selection baselines, regenerates both tables in memory, and compares saved structures and typeset cells exactly. It also checks that the frozen evidence matches the initial inventory. No inference service is contacted.
+
+\section{Related Work}
+NL4Opt concerns formulating optimization problems from natural-language descriptions \citep{ramamonjison2022nl4opt}. EquivaMap addresses equivalence through mappings between decision variables under Quasi-Karp equivalence \citep{zhai2025equivamap}. Our fixed-variable contract addresses a narrower verification problem and does not evaluate variable-mapping discovery. The rational inclusion checks use standard linear-programming certificates; the empirical question here is how their feedback interacts with generated formulations and reference readings.
+
+\section{Limitations}
+\begin{itemize}
+\item The empirical problems are 2-dimensional; support through dimension 6 has analytic regression coverage.
+\item The sensitivity policy uses 1 reviewer and outcome-selected cases; reference reuse adds 0 independent human labels.
+\item T8 uses \LadderN{} screened cases, fixed-peer feedback, reference-assisted stopping, and heuristic anchors; its observed gap is below the planning MDE.
+\item T11 uses \MetaN{} supported problems and rule-based text rewrites; its reference-conditional discard decision depends on 1 official source.
+\item Follow-ups use 1 model configuration and include public training problems; cross-model transfer and unseen-data generalization remain unmeasured.
+\end{itemize}
+
+\bibliography{refs}
+\end{document}

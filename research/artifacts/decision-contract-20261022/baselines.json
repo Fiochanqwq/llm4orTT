@@ -1,0 +1,334 @@
+{
+  "schema": "selection-baselines.v1",
+  "n": 60,
+  "new_model_requests": 0,
+  "reference_policy": "Frozen official annotations; oracle is an existing-candidate selection ceiling, not a deployable method.",
+  "methods": {
+    "pick-A": {
+      "correct": 42,
+      "rate": 0.7,
+      "exact_ci95": [
+        0.5679168661239384,
+        0.8115485545802774
+      ]
+    },
+    "pick-B": {
+      "correct": 46,
+      "rate": 0.7666666666666667,
+      "exact_ci95": [
+        0.6396172128942426,
+        0.866162656111152
+      ]
+    },
+    "oracle-select": {
+      "correct": 47,
+      "rate": 0.7833333333333333,
+      "exact_ci95": [
+        0.6580438212653474,
+        0.8792839755373032
+      ]
+    }
+  },
+  "rows": [
+    {
+      "id": "698081777",
+      "A": false,
+      "B": false
+    },
+    {
+      "id": "-1289899123",
+      "A": true,
+      "B": true
+    },
+    {
+      "id": "1294399767",
+      "A": true,
+      "B": true
+    },
+    {
+      "id": "-1587539848",
+      "A": false,
+      "B": false
+    },
+    {
+      "id": "1529148342",
+      "A": true,
+      "B": true
+    },
+    {
+      "id": "-682137487",
+      "A": true,
+      "B": true
+    },
+    {
+      "id": "1054847148",
+      "A": true,
+      "B": true
+    },
+    {
+      "id": "-950198491",
+      "A": true,
+      "B": true
+    },
+    {
+      "id": "-1969046840",
+      "A": true,
+      "B": true
+    },
+    {
+      "id": "1268238141",
+      "A": false,
+      "B": false
+    },
+    {
+      "id": "-272035411",
+      "A": false,
+      "B": false
+    },
+    {
+      "id": "-443483964",
+      "A": true,
+      "B": true
+    },
+    {
+      "id": "1402521519",
+      "A": false,
+      "B": false
+    },
+    {
+      "id": "-1464324143",
+      "A": true,
+      "B": true
+    },
+    {
+      "id": "1832323222",
+      "A": false,
+      "B": true
+    },
+    {
+      "id": "-1473799322",
+      "A": true,
+      "B": true
+    },
+    {
+      "id": "587452310",
+      "A": true,
+      "B": true
+    },
+    {
+      "id": "-1715698555",
+      "A": false,
+      "B": false
+    },
+    {
+      "id": "1074978508",
+      "A": true,
+      "B": true
+    },
+    {
+      "id": "25709243",
+      "A": true,
+      "B": true
+    },
+    {
+      "id": "1283305022",
+      "A": true,
+      "B": true
+    },
+    {
+      "id": "1605420061",
+      "A": false,
+      "B": false
+    },
+    {
+      "id": "454157274",
+      "A": true,
+      "B": true
+    },
+    {
+      "id": "-2081282851",
+      "A": true,
+      "B": true
+    },
+    {
+      "id": "-756853497",
+      "A": false,
+      "B": false
+    },
+    {
+      "id": "-1864917274",
+      "A": false,
+      "B": false
+    },
+    {
+      "id": "1178527024",
+      "A": true,
+      "B": true
+    },
+    {
+      "id": "2078392466",
+      "A": false,
+      "B": false
+    },
+    {
+      "id": "1625239928",
+      "A": true,
+      "B": true
+    },
+    {
+      "id": "1040407495",
+      "A": true,
+      "B": true
+    },
+    {
+      "id": "-550351289",
+      "A": true,
+      "B": true
+    },
+    {
+      "id": "721056636",
+      "A": true,
+      "B": true
+    },
+    {
+      "id": "2018818116",
+      "A": true,
+      "B": true
+    },
+    {
+      "id": "1133974368",
+      "A": true,
+      "B": true
+    },
+    {
+      "id": "892143253",
+      "A": false,
+      "B": true
+    },
+    {
+      "id": "1240783644",
+      "A": true,
+      "B": true
+    },
+    {
+      "id": "-534201937",
+      "A": false,
+      "B": true
+    },
+    {
+      "id": "1378302908",
+      "A": true,
+      "B": true
+    },
+    {
+      "id": "406925003",
+      "A": true,
+      "B": true
+    },
+    {
+      "id": "-661636428",
+      "A": true,
+      "B": true
+    },
+    {
+      "id": "861462634",
+      "A": true,
+      "B": true
+    },
+    {
+      "id": "-22176003",
+      "A": false,
+      "B": true
+    },
+    {
+      "id": "-1023375267",
+      "A": true,
+      "B": true
+    },
+    {
+      "id": "431521997",
+      "A": false,
+      "B": false
+    },
+    {
+      "id": "2137478401",
+      "A": false,
+      "B": false
+    },
+    {
+      "id": "118256182",
+      "A": true,
+      "B": true
+    },
+    {
+      "id": "-1713743137",
+      "A": true,
+      "B": false
+    },
+    {
+      "id": "201060410",
+      "A": false,
+      "B": true
+    },
+    {
+      "id": "-2001553884",
+      "A": true,
+      "B": true
+    },
+    {
+      "id": "102495722",
+      "A": true,
+      "B": true
+    },
+    {
+      "id": "1751406188",
+      "A": true,
+      "B": true
+    },
+    {
+      "id": "-361200173",
+      "A": true,
+      "B": true
+    },
+    {
+      "id": "-1965714403",
+      "A": true,
+      "B": true
+    },
+    {
+      "id": "1204240087",
+      "A": true,
+      "B": true
+    },
+    {
+      "id": "651026322",
+      "A": true,
+      "B": true
+    },
+    {
+      "id": "-1742967011",
+      "A": true,
+      "B": true
+    },
+    {
+      "id": "-437895545",
+      "A": true,
+      "B": true
+    },
+    {
+      "id": "-1832353699",
+      "A": false,
+      "B": false
+    },
+    {
+      "id": "1703643437",
+      "A": true,
+      "B": true
+    },
+    {
+      "id": "766541281",
+      "A": true,
+      "B": true
+    }
+  ]
+}

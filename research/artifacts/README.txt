@@ -1,4 +1,11 @@
 Published research evidence, not application user data.
+Latest decision-contract manuscript: decision-contract-20261022/paper/main.pdf
+Source, derived outcomes, publication inventory and reproduction instructions:
+decision-contract-20261022/README.md
+Includes reference reuse and T7/T8/T11 follow-ups; preserves the negative repair
+results and the metamorphic module's discard decision. No new human labels.
+This publication includes derived numerical outcomes, not raw conversations.
+
 Unzip mamo-audit-20261020-v1.zip and open 审计报告.html.
 The archive includes the unchanged original report and complete audit evidence.
 MAMO source and derived dataset: CC BY-SA 4.0; Huang, Shen, Hu, Gao, Wang; https://github.com/FreedomIntelligence/Mamo at revision 2c91069dee5c1e4db4b899eb176ec987d0251bb3. See enclosed DATA-LICENSE.txt.

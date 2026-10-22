@@ -28,3 +28,5 @@ jobs:
       - run: npm run test:stress
       - run: npm run test:certification
       - run: node scripts/llm-grounding-test.mjs
+      - run: python -B -m unittest discover -s tests -p test_decision_contract_protocol.py
+      - run: node --test tests/decision-budget.test.mjs

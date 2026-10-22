@@ -1,0 +1,297 @@
+{
+  "schema": "paper-tables.v1",
+  "source_directory": "../ (relative to paper/main.tex)",
+  "sources": {
+    "R1": "../baselines.json",
+    "R2": "../rescore.json"
+  },
+  "table1": [
+    {
+      "label": "pick-B",
+      "policy": null,
+      "correct": 46,
+      "n": 60,
+      "rate": 0.7666666666666667,
+      "exact_ci95": [
+        0.6396172128942426,
+        0.866162656111152
+      ],
+      "delta": 0,
+      "rank": null,
+      "source": "R1",
+      "field": "methods.pick-B"
+    },
+    {
+      "label": "pick-A",
+      "policy": null,
+      "correct": 42,
+      "n": 60,
+      "rate": 0.7,
+      "exact_ci95": [
+        0.5679168661239384,
+        0.8115485545802774
+      ],
+      "delta": 0,
+      "rank": null,
+      "source": "R1",
+      "field": "methods.pick-A"
+    },
+    {
+      "label": "A",
+      "policy": null,
+      "correct": 42,
+      "n": 60,
+      "rate": 0.7,
+      "exact_ci95": [
+        0.5679168661239384,
+        0.8115485545802774
+      ],
+      "delta": 0,
+      "rank": 4,
+      "source": "R2",
+      "field": "frozen_summary.A"
+    },
+    {
+      "label": "B",
+      "policy": null,
+      "correct": 46,
+      "n": 60,
+      "rate": 0.7666666666666667,
+      "exact_ci95": [
+        0.6396172128942426,
+        0.866162656111152
+      ],
+      "delta": 0,
+      "rank": 1,
+      "source": "R2",
+      "field": "frozen_summary.B"
+    },
+    {
+      "label": "abstract",
+      "policy": null,
+      "correct": 44,
+      "n": 60,
+      "rate": 0.7333333333333333,
+      "exact_ci95": [
+        0.6033896599745043,
+        0.8392535484095847
+      ],
+      "delta": 0,
+      "rank": 2,
+      "source": "R2",
+      "field": "frozen_summary.abstract"
+    },
+    {
+      "label": "witness",
+      "policy": null,
+      "correct": 43,
+      "n": 60,
+      "rate": 0.7166666666666667,
+      "exact_ci95": [
+        0.5855639310501701,
+        0.825494716485625
+      ],
+      "delta": 0,
+      "rank": 3,
+      "source": "R2",
+      "field": "frozen_summary.witness"
+    },
+    {
+      "label": "oracle-select",
+      "policy": null,
+      "correct": 47,
+      "n": 60,
+      "rate": 0.7833333333333333,
+      "exact_ci95": [
+        0.6580438212653474,
+        0.8792839755373032
+      ],
+      "delta": 0,
+      "rank": null,
+      "source": "R1",
+      "field": "methods.oracle-select"
+    }
+  ],
+  "table2": [
+    {
+      "label": "A",
+      "policy": "Frozen",
+      "correct": 42,
+      "n": 60,
+      "rate": 0.7,
+      "exact_ci95": [
+        0.5679168661239384,
+        0.8115485545802774
+      ],
+      "delta": 0,
+      "rank": 4,
+      "source": "R2",
+      "field": "frozen_summary.A"
+    },
+    {
+      "label": "B",
+      "policy": "Frozen",
+      "correct": 46,
+      "n": 60,
+      "rate": 0.7666666666666667,
+      "exact_ci95": [
+        0.6396172128942426,
+        0.866162656111152
+      ],
+      "delta": 0,
+      "rank": 1,
+      "source": "R2",
+      "field": "frozen_summary.B"
+    },
+    {
+      "label": "abstract",
+      "policy": "Frozen",
+      "correct": 44,
+      "n": 60,
+      "rate": 0.7333333333333333,
+      "exact_ci95": [
+        0.6033896599745043,
+        0.8392535484095847
+      ],
+      "delta": 0,
+      "rank": 2,
+      "source": "R2",
+      "field": "frozen_summary.abstract"
+    },
+    {
+      "label": "witness",
+      "policy": "Frozen",
+      "correct": 43,
+      "n": 60,
+      "rate": 0.7166666666666667,
+      "exact_ci95": [
+        0.5855639310501701,
+        0.825494716485625
+      ],
+      "delta": 0,
+      "rank": 3,
+      "source": "R2",
+      "field": "frozen_summary.witness"
+    },
+    {
+      "label": "A",
+      "policy": "seven_case",
+      "correct": 46,
+      "n": 60,
+      "rate": 0.7666666666666667,
+      "exact_ci95": [
+        0.6396172128942426,
+        0.866162656111152
+      ],
+      "delta": 4,
+      "rank": 4,
+      "source": "R2",
+      "field": "variants.seven_case.summary.A"
+    },
+    {
+      "label": "B",
+      "policy": "seven_case",
+      "correct": 50,
+      "n": 60,
+      "rate": 0.8333333333333334,
+      "exact_ci95": [
+        0.7147807451712971,
+        0.9170711898409363
+      ],
+      "delta": 4,
+      "rank": 1,
+      "source": "R2",
+      "field": "variants.seven_case.summary.B"
+    },
+    {
+      "label": "abstract",
+      "policy": "seven_case",
+      "correct": 47,
+      "n": 60,
+      "rate": 0.7833333333333333,
+      "exact_ci95": [
+        0.6580438212653474,
+        0.8792839755373032
+      ],
+      "delta": 3,
+      "rank": 2,
+      "source": "R2",
+      "field": "variants.seven_case.summary.abstract"
+    },
+    {
+      "label": "witness",
+      "policy": "seven_case",
+      "correct": 47,
+      "n": 60,
+      "rate": 0.7833333333333333,
+      "exact_ci95": [
+        0.6580438212653474,
+        0.8792839755373032
+      ],
+      "delta": 4,
+      "rank": 2,
+      "source": "R2",
+      "field": "variants.seven_case.summary.witness"
+    },
+    {
+      "label": "A",
+      "policy": "seven_plus_all_annotation",
+      "correct": 46,
+      "n": 60,
+      "rate": 0.7666666666666667,
+      "exact_ci95": [
+        0.6396172128942426,
+        0.866162656111152
+      ],
+      "delta": 4,
+      "rank": 4,
+      "source": "R2",
+      "field": "variants.seven_plus_all_annotation.summary.A"
+    },
+    {
+      "label": "B",
+      "policy": "seven_plus_all_annotation",
+      "correct": 50,
+      "n": 60,
+      "rate": 0.8333333333333334,
+      "exact_ci95": [
+        0.7147807451712971,
+        0.9170711898409363
+      ],
+      "delta": 4,
+      "rank": 1,
+      "source": "R2",
+      "field": "variants.seven_plus_all_annotation.summary.B"
+    },
+    {
+      "label": "abstract",
+      "policy": "seven_plus_all_annotation",
+      "correct": 47,
+      "n": 60,
+      "rate": 0.7833333333333333,
+      "exact_ci95": [
+        0.6580438212653474,
+        0.8792839755373032
+      ],
+      "delta": 3,
+      "rank": 2,
+      "source": "R2",
+      "field": "variants.seven_plus_all_annotation.summary.abstract"
+    },
+    {
+      "label": "witness",
+      "policy": "seven_plus_all_annotation",
+      "correct": 47,
+      "n": 60,
+      "rate": 0.7833333333333333,
+      "exact_ci95": [
+        0.6580438212653474,
+        0.8792839755373032
+      ],
+      "delta": 4,
+      "rank": 2,
+      "source": "R2",
+      "field": "variants.seven_plus_all_annotation.summary.witness"
+    }
+  ]
+}

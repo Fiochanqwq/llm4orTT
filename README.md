@@ -10,6 +10,8 @@ llm4orTT 是一个上下文逆优化工作台，提供 Windows 桌面应用和�
 
 [下载已发布版本](https://github.com/Fiochanqwq/llm4orTT/releases) · [数学与实现说明](docs/CONTEXTUAL_INVERSE.md) · [公开研究证据](research/artifacts/README.txt) · [当前任务板](任务.md)
 
+最新研究论文：[决策集合核验预印本](research/artifacts/decision-contract-20261022/paper/main.pdf)，已同步公开参考复用、一致采样、反馈粒度和变形差分结果。方法、失败结果及复算说明见[论文与数值来源](research/artifacts/decision-contract-20261022/README.md)。
+
 ## 核心流程
 
 ```text
