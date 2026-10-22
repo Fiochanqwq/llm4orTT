@@ -2,101 +2,142 @@
 
 [![CI](https://github.com/Fiochanqwq/llm4orTT/actions/workflows/ci.yml/badge.svg)](https://github.com/Fiochanqwq/llm4orTT/actions/workflows/ci.yml)
 
-**0.1.2** · 普通对话与上下文逆优化工作台。程序与 npm 元数据使用标准版本号 `0.1.2`。
+**从文字日志和历史选择中学习偏好，让优化方案有依据、可检查。**
 
-从运营日志和历史决策中恢复优化模型的隐藏权重，用稀疏正则化筛选候选假设。内置示例可在本地运行，无需 API 密钥。
+llm4orTT 是一个上下文逆优化工作台，提供 Windows 桌面应用和本地浏览器界面。当前源码版本为 **0.1.2**，集成偏好权重估计、候选规则筛选、参数范围分析和条件风险检查，也提供独立的普通对话功能。
 
-## Windows 使用
+例如：历史排班经常避开夜班和跨区支援，系统可以根据已有模型与候选规则，估计这些安排的隐性代价，再展示哪些规则被保留、哪些历史难以解释，以及推荐方案在声明条件下的最坏额外费用。
 
-从 [Releases](https://github.com/Fiochanqwq/llm4orTT/releases) 下载 Windows x64 压缩包，完整解压后运行 `llm4orTT.exe`。`Browser.cmd` 可打开浏览器界面。请保留随包提供的 `resources` 目录。
+[下载已发布版本](https://github.com/Fiochanqwq/llm4orTT/releases) · [数学与实现说明](docs/CONTEXTUAL_INVERSE.md) · [公开研究证据](research/artifacts/README.txt) · [当前任务板](任务.md)
 
-默认进入普通对话，支持多轮上下文、历史记录、停止、重试、搜索、重命名、复制、文本附件和导出。在“设置”中选择服务商并保存密钥。顶部“逆优化工作台”中的“运行三步重构”运行真实本地求解器。原有本地配置与聊天仍可读取。
+## 核心流程
 
-## DeepSeek 新旧版本
+```text
+任务描述、文字日志、历史决策与候选模型
+                  ↓
+         本地逆优化：估计共享偏好权重
+                  ↓
+       稀疏筛选、残差分析与参数范围检查
+                  ↓
+          条件风险检查、结果展示与导出
+```
 
-默认使用最新官方入口 `deepseek-flash`。内置 V4 Pro、V4 兼容别名、历史 Chat/Reasoner/Coder、V2、V2.5、V3、R1、V3.1、V3.2 系列候选 ID，同时允许手填任何前缀、日期快照和新型号。
+启用模型辅助后，大模型可补充候选规则；数值拟合与数学检查由本地求解器完成。
 
-在设置中选择 DeepSeek、填写密钥，点击“刷新可用模型”，再选择模型并“测试连接”。旧模型或自部署服务可在高级设置中填写提供该型号的 OpenAI Chat Completions 兼容 HTTPS 地址。程序按代际适配参数，不会自动替换模型。
+- **偏好学习**：结合已知成本与历史选择，估计候选特征的共享权重；支持线性特征和软约束惩罚。
+- **本地分析**：选择正则化强度，展示拟合残差、异常样本和能够解释历史的参数范围。
+- **条件风险检查**：在声明的历史误差预算和参数范围下，计算方案损失上下界；提供风险见证和误差预算敏感性结果。
+- **过程追溯**：回看历史运行，导出输入、权重、残差、求解轨迹及模型调用用量。
+- **模型辅助**：按需请求候选规则，复用相同请求的缓存；工作台单次运行最多发起 1 次模型请求。
+- **普通对话**：支持多轮上下文、停止、重试、搜索、重命名、文本附件和导出。
 
-预设 ID 只是填写提示；可用性以接口实际提供的模型为准。官方已下线的版本需要仍托管它的服务，官方兼容别名也可能被路由到新模型。详情见 [兼容说明](docs/DEEPSEEK_COMPATIBILITY.md)。
+## 快速上手
 
-## 源码运行与验证
+### 使用 Windows 应用
 
-需要 Node.js 24 或更新版本。Windows 脚本会下载固定的嵌入式 Python；Linux/macOS 还需要 Python 3.13 和 venv 支持。首次安装需要联网。
+1. 在 [Releases](https://github.com/Fiochanqwq/llm4orTT/releases) 选择已发布的 Windows x64 压缩包，完整解压。
+2. 运行 `llm4orTT.exe`；也可通过包内的 `Browser.cmd` 打开浏览器界面。运行时请保留完整的 `resources/` 目录。
+3. 进入顶部的“逆优化工作台”，载入排班示例，点击“运行三步重构”。
+4. 查看恢复结果、本地数学检查与风险结果，点击“导出证据”保存 JSON。
+
+**内置排班示例可在本地运行，无需 API 密钥。** 安装包的版本以对应 Release 标签为准。
+
+### 从源码启动
+
+环境要求：Node.js 24 或更新版本。Windows 安装脚本会下载固定版本的嵌入式 Python；Linux/macOS 需要 Python 3.13 及 venv 支持。首次安装需要联网。
+
+在项目根目录执行：
 
 ```sh
 npm ci
 npm run solver:prepare
 npm run build
 npm start
+```
+
+`npm start` 启动本地服务并打开浏览器。Windows 桌面模式使用：
+
+```sh
+npm run desktop
+```
+
+完成依赖与求解器安装后，开发模式使用 `npm run dev`，打开终端给出的本地地址。
+
+### 配置模型辅助与对话
+
+在“设置”中选择服务商、保存密钥，刷新可用模型后测试连接。逆优化工作台需勾选“需要时请大模型补充规则”才会使用模型辅助；普通对话使用单独的对话流程。
+
+DeepSeek 默认配置为 `deepseek-flash`，支持预设候选、接口发现与手动填写模型 ID。旧型号和自部署服务可填写兼容的 HTTPS 接口地址，程序按型号适配参数。候选 ID 的实际可用性由所选接口决定，配置细节见 [DeepSeek 兼容说明](docs/DEEPSEEK_COMPATIBILITY.md)。
+
+启用模型功能时，任务文本及相应上下文会发送到所选服务商。密钥、聊天记录和运行缓存保存在本机，提交代码时由忽略规则排除。
+
+## 验证与打包
+
+基础回归检查：
+
+```sh
+npm run build
 npm test
 npm run test:inverse
 npm run test:research
-npm run benchmark:inverse
+npm run test:certification
 ```
 
-Windows 桌面使用 `npm run desktop` 或 `Start-Desktop.cmd`；开发前端使用 `npm run dev`。Windows 打包：`npm run package`，输出 `release/0.1.2/win-unpacked/llm4orTT.exe`。浏览器与桌面验收：`npm run qa:browser`、`npm run qa:desktop`。
+公开基准相关的离线数学测试：
 
-GitHub Actions 对推送与 PR 执行构建、接口和真实求解器测试。历史版本标签 `v0.1` 会额外构建 Windows 包、验证打包后程序，并发布 ZIP 和 SHA256 校验文件。见 [贡献指南](CONTRIBUTING.md) 和 [发布记录](CHANGELOG.md)。
+```sh
+npm run test:mamo
+npm run test:multifamily
+npm run test:stress
+```
 
-## 数据与研究边界
+上述测试入口不需要付费模型调用。浏览器与打包后桌面验收分别使用 `npm run qa:browser`、`npm run qa:desktop`。
 
-密钥、聊天、未整理的实验输出、模型文件和运行时不进入 Git；安装包通过 Releases 分发。经过核验的公开研究证据包单独放在 `research/artifacts`，不含用户聊天或密钥。启用大模型会把当前任务数据发送到所选接口。离线复算需归档的实验数据，见 [复现说明](research/REPRODUCE.txt)。
+Windows 打包：
 
-实现边界与实验协议见 [研究说明](docs/CONTEXTUAL_INVERSE.md)。当前内置评测为合成排班数据；公开题实验见 [决策契约案例簿](实验/决策契约研究_2026-10-21_01/案例簿.md)。新方向代码位于 `server/inverse.mjs`、`solver/inverse.py` 和 `src/Inverse.tsx`。
+```sh
+npm run package
+```
 
-新增独立的 MAMO 公开数据实验管线：固定审计40道配餐题，39道重构模型与公开答案一致；使用受控生成的日志和历史做遮蔽恢复、少样本噪声与消融比较。数据来源、数学公式、排除记录和复算方法见 [MAMO复现说明](research/REPRODUCE_MAMO.txt)。覆盖配餐单一题型（n=40）。`npm run test:mamo` 不需要下载研究数据；`npm run experiment:mamo` 需要归档的冻结数据和模型回答。
+输出位于 `release/0.1.2/win-unpacked/`。修改 `src/` 或 `solver/` 后重新构建；发布包中的求解器由维护源码同步生成。
 
-原始代码保留全部权利，见 [LICENSE](LICENSE)。第三方依赖许可见 [THIRD_PARTY_NOTICES.txt](THIRD_PARTY_NOTICES.txt)。
+推送和拉取请求触发 [CI](.github/workflows/ci.yml)。与项目版本匹配的 `v*` 标签触发 [Windows 发布流程](.github/workflows/release.yml)，完成打包、桌面验收和 ZIP 校验文件发布。协作与版本规则见 [贡献指南](CONTRIBUTING.md) 和 [更新记录](CHANGELOG.md)。
 
-### 多公开基准压力测试（2026-10-20）
+## 研究资料与复现
 
-新增 NETLIB、OR-Library 和 TSPLIB95 三个公开基准集合：预列 14 个实例，13 个通过公开最优值核验，一个来源不可用并保留。固定三次种子、九种方法，包含全零、常见价格、固定中点和随机报数四个不学习对照。全部排程、失败、最优面诊断、参数范围和资源账进入独立证据包；旧 MAMO 证据不替换。
+**应用演示、离线测试和完整实验各有独立入口。** 完整实验依赖对应的冻结数据、归档响应及运行环境；先阅读各批次复现说明，再按[任务板](任务.md)执行预算和冻结规则。
 
-AFIRO 给出明确反例：隐藏价格误差达到 100% 时，决策费用损失仍可为零；无噪声且取消稀疏惩罚也会出现。方案分与真实价格恢复因此是两个量。文本候选仍是受控模板，历史仍是生成数据。
+- [基础逆优化实验](research/REPRODUCE.txt)：合成排班、偏好恢复与消融评测。
+- [MAMO 配餐实验](research/REPRODUCE_MAMO.txt)：公开题重构、遮蔽恢复和事后审计。
+- [跨题型实验](research/REPRODUCE_MULTIFAMILY.txt)：调运、路线模型及方法对照。
+- [公开基准压力测试](research/REPRODUCE_STRESS.txt)：NETLIB、OR-Library、TSPLIB95，以及参数误差与决策损失的区别。
+- [真实模型文本闭环](research/REPRODUCE_LLM_GROUNDING.txt)：真实模型响应、文本消融、反馈和失败记录。
+- [条件风险证书研究](research/REPRODUCE_PUBLICATION.txt)：方法比较、精确核验、误差预算敏感性及报告生成。
 
-主条件下，背包平均费用损失为 1.026%，常见价格对照为 10.945%，但隐藏价格误差仍为 51.496%；连续规划反而较差，0.286% 对 0.035%。路线库有一组共享历史生成失败，该队列不构成完整胜利。共 1,368 条完成、108 条来源不可用、36 条受共享管线阻断；97 次额外最坏最优面检查超时。本批未观察到稀疏与文本候选筛选的稳定优势。所有计算在本地完成，付费 API 调用为零。
+公开证据包统一收录在 [research/artifacts/](research/artifacts/README.txt)，包含逐题结果、原始失败、核验材料和数据许可。该目录同时记录已有实验中的负面结果：文本候选与稀疏筛选的相对收益随题型变化，闭环反馈在完整配对样本上没有改善结果。
 
-运行与数学口径见 [压力测试复现说明](research/REPRODUCE_STRESS.txt)；完整结果在 [公开证据目录](research/artifacts/README.txt)。`npm run test:stress` 执行无需下载数据的数学测试；`npm run experiment:stress` 使用公开源文件执行冻结实验。中断和重复调度事故也归档，受影响任务用同一输入重算，成本记为实际值。
+本地完整实验资料位于 `实验/`，入口为 `实验/先看这里.txt`；该目录受忽略规则排除，克隆仓库后需另行取得对应归档。决策契约批次的逐题分析以本地 `实验/决策契约研究_2026-10-21_01/案例簿.md` 为事实来源，后续工作见[任务板](任务.md)。
 
-### MAMO事后审计（2026-10-20）
+### 适用范围
 
-已公开的完整证据包在 [research/artifacts](research/artifacts/README.txt)。下载其中 ZIP，解压后打开“审计报告.html”，可以查看逐题数据、旧报告、复算脚本和结论处置记录。
+- 输入包含已知模型骨架、历史决策与候选特征；离线流程直接使用已有候选进行拟合。
+- 参数范围描述经验损失约束下的可行取值，统计置信区间需另行估计。低残差与参数唯一恢复是不同指标。
+- 桌面风险证书面向能够完整枚举的小型有界整数问题；计算不足时返回未决状态。连续规划基础求解与二维几何研究模块使用各自的实现入口。
+- 风险结果依赖输入的误差预算、特征和可行域。内置排班与多批历史日志采用合成或受控生成数据，数据构造和逐批结论见对应复现材料。
 
-旧实验分数和测试集保持不变。审计数据：主比较中2号、39号题占本方法总损失的86.50%；零价格导致最优解不唯一，改变变量排列会改变决策遗憾；25/62个隐藏价格从未被训练历史激活。文本候选、稀疏惩罚以及相对固定报10的额外收益在本批未观察到稳定优势。
+## 代码导航
 
-`npm run audit:mamo` 从归档证据执行本地审计；`npm run audit:mamo -- --recompute` 在新的独立输出目录从零重算。两者都不调用付费模型。结果包含原始报告副本、全部方法对照、参数范围、最优解退化证书、逐题下载及结论处置账本；`npm run qa:mamo-audit` 检查报告。审计数学与证据核验在 `research/mamo_audit.py` 和 `research/mamo_audit_verify.py`，绘图在 `research/mamo_audit_report.py`。
+```text
+src/                 前端界面、逆优化工作台与风险结果展示
+server/              本地服务、模型接口、运行记录与求解器调用
+solver/              逆优化、条件风险证书与敏感性分析的维护源码
+research/            实验方法、分析、复现说明与公开证据包
+scripts/             开发、构建、打包和实验入口
+test/                应用与既有研究回归测试
+tests/               证书、几何与实验完整性测试
+docs/                数学说明、接口兼容与环境锁定
+```
 
-### 冻结跨题型扩展（2026-10-20）
+## 许可
 
-新增调运与闭环路线两类模型，审计 59 道候选题，准入 19 道；其中 16 道测试题、3 道开发题。5 次重复、8 种本地方法、2 个历史数量和 2 个噪声上限，共 3,040 条结果，新增付费调用为 0。
-
-路线题主条件平均遗憾从固定中点的 4.271% 降到文本候选稀疏逆优化的 0.764%，但仅有 5 道准入测试题。调运题的相对收益区间跨零，且估计最优方案之间有严重费用歧义；这些反例全部保留。文本候选为受控生成。
-
-[完整证据包](research/artifacts/README.txt)包含逐题五次最好／中间／最差、所有对照、独立模型核验和论文草稿。[复现说明](research/REPRODUCE_MULTIFAMILY.txt)。`npm run test:multifamily` 运行无数据依赖的数学测试，`npm run experiment:multifamily -- --recompute` 在新目录重算全套实验，保留原档。普通聊天功能和软件版本 `0.1.0` 保持不变。
-
-
-## 2026-10-20 目录与源码合并
-
-唯一开发入口为本目录，版本 0.1.2。原“llm4orOvO 工程”的 Git 历史、公开实验、数据集与今晚 0.1.2 的风险检查、研究脚本、失败案例已合并。
-新增风险检查界面已回迁到 src/inverse-certification.js，新增求解器位于 solver/，package 配置包含完整模块，避免重新构建时丢失新版功能。
-程序入口是 llm4orTT.exe；实验入口是 实验/先看这里.txt；当前任务板是 [任务.md](任务.md)。
-目标为 AAAI 长文；现有反例与负结果保持原样。
-历史成绩保持冻结；本次整理的验证结果另存 实验/整理合并验证_2026-10-20/。
-
-## Unified publication-study workflow
-
-Run `node scripts/publication-deliver.mjs` for preflight tests, a real local HTTP
-integration check, frozen synthetic experiments, independent exact verification,
-paired analysis, Chinese PDF/HTML reports, browser QA, and a checksummed evidence
-archive. Numeric-only execution is available as `npm run experiment:publication`;
-`npm run audit:publication` rechecks an unchanged frozen study.
-
-The default output is `实验/出版级复核_2026-10-21/`. Existing outcomes are retained:
-resume requires unchanged sources, protocol, software environment, schedules and
-evidence hashes. Failed or interrupted scientific attempts are never silently
-retried. See [reproduction and evidence contracts](research/REPRODUCE_PUBLICATION.txt).
-
-This workflow evaluates conditional risk certificates on three synthetic generator
-families. Scope: synthetic generators only; no language-model experiments, no MILP
-scalability study in this workflow.
+项目原始代码和美术资源保留全部权利，使用与再分发按 [LICENSE](LICENSE) 执行。第三方组件遵循各自许可，见 [THIRD_PARTY_NOTICES.txt](THIRD_PARTY_NOTICES.txt)；研究数据许可随对应证据包提供。
